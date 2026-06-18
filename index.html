@@ -317,7 +317,7 @@ const current=()=>{for(let n=1;n<=8;n++)if(!done(n))return n;return 9;};
 const noDuesDone=()=>S.noDues.every(x=>x.signed);
 
 /* ---------------- actions ---------------- */
-function setRole(r){S.role=r;S.open=Math.min(current(),7)||1;render();}
+function setRole(r){S.role=r;const cap=r==='manager'?4:8;S.open=Math.min(current(),cap)||1;render();}
 function resetState(){S=sample();render();toast('Reset to sample (mid-flow)');}
 function freshStart(){S=fresh();render();toast('Fresh employee — no resignation yet');}
 function applyResignation(){
@@ -370,13 +370,16 @@ function undoBtn(n,label){
 }
 
 /* ---------------- render: shared bits ---------------- */
+// Manager sees only stages 1–4; Admin/HR see all 8.
+const maxStage=()=>isMgr()?4:STAGES.length;
 function stepper(){
   const cur=current();
-  return `<div class="stepper">`+STAGES.map((st,idx)=>{
+  const steps=STAGES.slice(0,maxStage());
+  return `<div class="stepper">`+steps.map((st,idx)=>{
     const isDone=done(st.n), isNow=st.n===cur;
     const dotCls=isDone?'dot-done':isNow?'dot-now':'dot-wait';
     const dotInner=isDone?icon('i-check'):st.n;
-    const line=idx<STAGES.length-1?`<span class="line ${isDone?'line-done':''}"></span>`:'';
+    const line=idx<steps.length-1?`<span class="line ${isDone?'line-done':''}"></span>`:'';
     return `<div class="step ${S.open===st.n?'sel':''}" onclick="openStage(${st.n})">
       <div class="dotrow"><span class="dot ${dotCls}">${dotInner}</span>${line}</div>
       <span class="slabel">${st.title}</span><span class="sowner">${st.owner}</span></div>`;
@@ -469,6 +472,14 @@ function stagesColumn(){
      `<div class="divider"></div><div class="row-flex">
        <button class="btn btn-primary" ${(isHR()||isMgr())&&!S.ktSigned?'':'disabled'} onclick="signKt()">${icon('i-check')} ${S.ktSigned?'KT signed off':'Sign off: KT complete'}</button>
        <span class="rolehint">Reporting Manager / HR</span></div>${undoBtn(4,'Undo KT sign-off')}</div></div>`;
+
+  // Manager's view stops here — stages 5–8 are Admin/HR only.
+  if(isMgr()){
+    h+=`<div class="banner banner-blue" style="margin-top:4px"><span class="bi bi-blue">${icon('i-lock',17)}</span><div>
+      <div class="bt">Remaining steps are handled by HR / Admin</div>
+      <div class="bd">Asset recovery, F&F settlement, No-Dues clearance and the exit letters (stages 5–8) are managed by Finance / HR. You'll be notified of updates.</div></div></div>`;
+    return h;
+  }
 
   // Stage 5 assets
   h+=`<div class="stage ${S.open===5?'open':''}">${stageHead(5,'Recover hardware & revoke access')}<div class="stage-body">`+
@@ -563,9 +574,9 @@ function attnBar(){
   const items=[];
   if(S.revert==='requested'&&isHR()) items.push(`<button class="tagbtn tag-amber" onclick="S.open=0;render()">${icon('i-undo')} Revert request — approve / decline</button>`);
   if(!S.ktSigned) items.push(`<button class="tagbtn tag-blue" onclick="openStage(4)">${icon('i-check')} KT sign-off due</button>`);
-  else if(!done(6)) items.push(`<button class="tagbtn tag-blue" onclick="openStage(6)">${icon('i-dollar')} F&amp;F statement pending</button>`);
-  else if(!noDuesDone()) items.push(`<button class="tagbtn tag-blue" onclick="openStage(7)">${icon('i-shield')} No-Dues sign-offs pending</button>`);
-  else if(!done(8)) items.push(`<button class="tagbtn tag-ok" onclick="openStage(8)">${icon('i-mail')} Ready to issue letters</button>`);
+  else if(isHR()&&!done(6)) items.push(`<button class="tagbtn tag-blue" onclick="openStage(6)">${icon('i-dollar')} F&amp;F statement pending</button>`);
+  else if(isHR()&&!noDuesDone()) items.push(`<button class="tagbtn tag-blue" onclick="openStage(7)">${icon('i-shield')} No-Dues sign-offs pending</button>`);
+  else if(isHR()&&!done(8)) items.push(`<button class="tagbtn tag-ok" onclick="openStage(8)">${icon('i-mail')} Ready to issue letters</button>`);
   if(!items.length) items.push(`<span class="rolehint">Nothing needs your attention right now.</span>`);
   return `<div class="attn"><span class="lbl">Needs attention</span>${items.join('')}</div>`;
 }
