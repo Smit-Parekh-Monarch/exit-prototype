@@ -231,6 +231,7 @@
     <button id="tab-manager" onclick="setRole('manager')"><svg class="ic"><use href="#i-users"/></svg> Manager</button>
     <button id="tab-employee" onclick="setRole('employee')"><svg class="ic"><use href="#i-user"/></svg> Employee</button>
   </div>
+  <button class="reset" onclick="freshStart()"><svg class="ic"><use href="#i-user"/></svg> Fresh start</button>
   <button class="reset" onclick="resetState()"><svg class="ic"><use href="#i-redo"/></svg> Reset</button>
 </div></div>
 
@@ -245,15 +246,16 @@ const STAGES=[
   {n:3,title:'Decision',owner:'Manager + HR'},
   {n:4,title:'Knowledge Transfer',owner:'Manager + Employee'},
   {n:5,title:'Asset Recovery',owner:'IT + Admin'},
-  {n:6,title:'No-Dues',owner:'All depts'},
-  {n:7,title:'F&F & Documents',owner:'Finance + HR'},
+  {n:6,title:'No-Dues & F&F',owner:'All depts · Finance + HR'},
+  {n:7,title:'Relieving & Experience Letters',owner:'Finance + HR'},
 ];
-function fresh(){return{
+function sample(){return{
   role:'admin', open:4,
   emp:{name:'Rahul Mehta',code:'MIPL-0142',title:'Senior Backend Engineer',dept:'Engineering',tenure:'3 yrs 4 mo',initials:'RM'},
   status:'Accepted',
   reason:'Better Opportunity', submitted:'02 Jun 2026', proposedLwd:'02 Jul 2026', confirmedLwd:'02 Jul 2026',
   noticeReq:30, noticeServed:28, earlyRelease:'Granted', decidedBy:'Deep Bhatt · HR',
+  mgrApproved:true, mgrApprovedBy:'Anjali Rao · Manager',   // manager's 1st-level approval (precedes HR accept)
   revert:'requested',           // none | requested | approved | declined
   kt:[{t:'Reassign active project work',s:'Payments service moved to Karan Shah',done:true},
       {t:'Document handover notes',s:'Uploaded 12 Jun 2026',done:true},
@@ -276,7 +278,21 @@ function fresh(){return{
             {t:'Experience letter released',d:'12 Jun · Deep Bhatt'},{t:'Resignation accepted',d:'04 Jun · Deep Bhatt'},
             {t:'Acknowledged',d:'03 Jun · Anjali Rao'},{t:'Submitted',d:'02 Jun · Rahul Mehta'}],
 };}
-let S = fresh();
+/* fresh = employee has NOT resigned yet (shows the apply flow) */
+function fresh(){
+  const d=sample();
+  d.status='None'; d.reason=''; d.submitted=''; d.proposedLwd=''; d.confirmedLwd='';
+  d.noticeServed=0; d.earlyRelease='—'; d.decidedBy=''; d.revert='none';
+  d.mgrApproved=false; d.mgrApprovedBy='';
+  d.kt.forEach(k=>{k.done=false;k.s='Pending';});
+  d.assets.forEach(a=>a.done=false); d.noDues.forEach(x=>x.signed=false);
+  d.ktSigned=false; d.fnfApproved=false;
+  d.docs={experience:{rev:0,released:false},relieving:{rev:0,released:false},fnf:{rev:0,released:false}};
+  d.cc=[]; d.comments=[]; d.empMsgs=[]; d.activity=[];
+  d.role='employee'; d.open=1;
+  return d;
+}
+let S = sample();
 
 /* ---------------- helpers ---------------- */
 const $=s=>document.querySelector(s);
@@ -284,21 +300,35 @@ function icon(id,sz){return `<svg class="ic"${sz?` style="font-size:${sz}px"`:''
 function toast(m){const t=$('#toast');t.innerHTML=icon('i-check')+m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);}
 function log(t,by){S.activity.unshift({t,d:'now · '+by});}
 const isHR=()=>S.role==='admin', isMgr=()=>S.role==='manager';
+const RANK={None:0,Submitted:1,Acknowledged:2,Accepted:3,'In progress':3,Completed:4,Rejected:-1,Cancelled:-1};
 const done=n=>{
-  if(n<=2) return true;
-  if(n===3) return S.status==='Accepted';
+  if(n===1) return (RANK[S.status]||0)>=1;
+  if(n===2) return (RANK[S.status]||0)>=2;
+  if(n===3) return (RANK[S.status]||0)>=3;
   if(n===4) return S.ktSigned;
   if(n===5) return S.assets.every(a=>a.done);
-  if(n===6) return S.noDues.every(x=>x.signed);
-  if(n===7) return S.docs.relieving.released&&S.docs.fnf.released;
+  if(n===6) return S.noDues.every(x=>x.signed)&&S.fnfApproved&&S.docs.fnf.released;   // No-Dues + F&F doc issued
+  if(n===7) return S.docs.relieving.released&&S.docs.experience.released;             // both letters issued
   return false;
 };
 const current=()=>{for(let n=1;n<=7;n++)if(!done(n))return n;return 8;};
 const noDuesDone=()=>S.noDues.every(x=>x.signed);
 
 /* ---------------- actions ---------------- */
-function setRole(r){S.role=r;S.open=Math.min(current(),7);render();}
-function resetState(){S=fresh();render();toast('Prototype reset');}
+function setRole(r){S.role=r;S.open=Math.min(current(),7)||1;render();}
+function resetState(){S=sample();render();toast('Reset to sample (mid-flow)');}
+function freshStart(){S=fresh();render();toast('Fresh employee — no resignation yet');}
+function applyResignation(){
+  const lwd=($('#apLwd')&&$('#apLwd').value)||'02 Aug 2026';
+  const reason=($('#apReason')&&$('#apReason').value)||'Better Opportunity';
+  const early=$('#apEarly')&&$('#apEarly').checked;
+  S.status='Submitted'; S.reason=reason; S.submitted='17 Jun 2026'; S.proposedLwd=lwd; S.confirmedLwd='';
+  S.earlyRelease=early?'Requested':'Not requested'; S.open=1;
+  log('Resignation submitted','Rahul Mehta'); render(); toast('Resignation submitted to HR');
+}
+function acknowledgeAction(){S.status='Acknowledged';log('Acknowledged',actor());render();toast('Acknowledged');}
+function mgrApprove(){S.mgrApproved=true;S.mgrApprovedBy=actor();log('Manager approved the resignation',actor());render();toast('Manager approval recorded — HR can now accept');}
+function acceptAction(){if(!S.mgrApproved){toast('Manager approval is required first');return;}S.status='Accepted';S.confirmedLwd=S.proposedLwd||'02 Jul 2026';S.noticeServed=28;S.decidedBy=actor();log('Resignation accepted by HR',actor());render();toast('Resignation accepted');}
 function openStage(n){S.open=(S.open===n?0:n);render();}
 function approveRevert(){S.revert='approved';S.status='Acknowledged';log('Revert approved → Acknowledged',actor());render();toast('Revert approved — status stepped back');}
 function declineRevert(){S.revert='declined';log('Revert declined',actor());render();toast('Revert request declined');}
@@ -311,7 +341,8 @@ function signDept(i){S.noDues[i].signed=true;log('No-Dues signed: '+S.noDues[i].
 function approveFnf(){S.fnfApproved=true;log('F&F approved',actor());render();toast('F&F approved');}
 function genDoc(k,name){S.docs[k].rev++;render();toast(name+' regenerated (rev '+S.docs[k].rev+')');}
 function rollbackDoc(k,name){S.docs[k].released=false;log(name+' rolled back',actor());render();toast(name+' rolled back to draft');}
-function releaseAll(){S.docs.relieving.released=true;S.docs.fnf.released=true;S.docs.experience.released=true;log('All documents released & emailed',actor());render();toast('All 3 documents released & emailed');}
+function releaseFnf(){S.docs.fnf.released=true;if(!S.docs.fnf.rev)S.docs.fnf.rev=1;log('F&F Settlement Statement issued & emailed',actor());render();toast('F&F Settlement Statement issued');}
+function releaseLetters(){S.docs.relieving.released=true;S.docs.experience.released=true;log('Relieving & Experience letters released & emailed',actor());render();toast('Both letters released & emailed');}
 function sendDoc(name){toast(name+' emailed to employee');}
 function postComment(){const v=$('#cmtIn').value.trim();if(!v)return;S.comments.push({who:S.role==='manager'?'Anjali Rao':'Deep Bhatt',init:S.role==='manager'?'AR':'DB',when:'now',body:v});render();toast('Comment posted');}
 function empReply(){const v=$('#empIn').value.trim();if(!v)return;S.empMsgs.unshift({who:'Rahul Mehta · You',init:'RM',cls:'me',when:'now',body:v});render();toast('Message sent');}
@@ -326,8 +357,8 @@ function undoStage(n){
   if(n===3){S.status='Acknowledged';log('Acceptance undone — Accepted → Acknowledged',who);}
   else if(n===4){S.ktSigned=false;log('KT sign-off undone',who);}
   else if(n===5){S.assets.forEach(a=>a.done=false);log('Asset & access recovery undone',who);}
-  else if(n===6){S.noDues.forEach(x=>x.signed=false);log('No-Dues clearance undone',who);}
-  else if(n===7){S.docs.relieving.released=false;S.docs.fnf.released=false;log('Document release undone — relieving & F&F back to draft',who);}
+  else if(n===6){S.docs.fnf.released=false;S.fnfApproved=false;S.noDues.forEach(x=>x.signed=false);log('No-Dues & F&F undone — F&F statement back to draft',who);}
+  else if(n===7){S.docs.relieving.released=false;S.docs.experience.released=false;log('Letter release undone — relieving & experience back to draft',who);}
   S.open=n;render();toast('Step undone — recorded in history');
 }
 function undoBtn(n,label){
@@ -350,10 +381,13 @@ function stepper(){
 }
 function idcard(){
   const cur=current();
+  const none=S.status==='None';
+  const pill=none?'No active resignation':`${S.status} · ${cur>7?'Completed':'Stage '+cur+' of 7'}`;
+  const lwd=none?`Tenure <b>${S.emp.tenure}</b>`:`Last working day <b>${S.confirmedLwd||'—'}</b> · Tenure <b>${S.emp.tenure}</b>`;
   return `<div class="idcard"><div class="avatar">${S.emp.initials}</div>
     <div><div class="id-name">${S.emp.name}</div><div class="id-sub">${S.emp.code} · ${S.emp.title} · ${S.emp.dept}</div></div>
-    <div class="id-right"><span class="pill"><span class="dot"></span> ${S.status} · ${cur>7?'Completed':'Stage '+cur+' of 7'}</span>
-    <div class="lwd">Last working day <b>${S.confirmedLwd}</b> · Tenure <b>${S.emp.tenure}</b></div></div></div>`;
+    <div class="id-right"><span class="pill"><span class="dot"></span> ${pill}</span>
+    <div class="lwd">${lwd}</div></div></div>`;
 }
 function stageHead(n,extra){
   const st=STAGES[n-1], isDone=done(n), cur=current();
@@ -395,20 +429,33 @@ function stagesColumn(){
     <div class="item"><div class="k">Early release</div><div class="v">${S.earlyRelease}</div></div></div>
     <div class="divider"></div><button class="btn" onclick="toast('Opening resignation letter…')">${icon('i-paperclip')} View resignation letter</button></div></div>`;
 
-  // Stage 2 comments
-  h+=`<div class="stage ${S.open===2?'open':''}">${stageHead(2,'03 Jun 2026 · Anjali Rao')}<div class="stage-body">${commentsBlock(isHR()||isMgr())}</div></div>`;
+  // Stage 2 — acknowledge + internal comments
+  const ack2 = S.status==='Submitted'
+    ? `<div class="row-flex" style="margin-bottom:14px"><button class="btn btn-primary" ${(isHR()||isMgr())?'':'disabled'} onclick="acknowledgeAction()">${icon('i-check')} Acknowledge</button><span class="rolehint">Reporting Manager / HR</span></div>`
+    : '';
+  h+=`<div class="stage ${S.open===2?'open':''}">${stageHead(2,done(2)?'Acknowledged':'Awaiting acknowledgement')}<div class="stage-body">${ack2}${commentsBlock(isHR()||isMgr())}</div></div>`;
 
-  // Stage 3
-  h+=`<div class="stage ${S.open===3?'open':''}">${stageHead(3,S.status==='Accepted'?'Accepted 04 Jun 2026 · '+S.decidedBy:'Awaiting decision')}<div class="stage-body">`;
-  if(S.status==='Accepted'){
-    h+=`<div class="kv"><div class="item"><div class="k">Confirmed last day</div><div class="v">${S.confirmedLwd}</div></div>
+  // Stage 3 — decision: TWO-STEP (1) Manager approval → (2) HR accept & confirm
+  h+=`<div class="stage ${S.open===3?'open':''}">${stageHead(3,done(3)?'Accepted · '+S.decidedBy:'Awaiting decision')}<div class="stage-body">`;
+  if(done(3)){
+    h+=`<div class="kv"><div class="item"><div class="k">Manager approval</div><div class="v">${S.mgrApprovedBy||'—'}</div></div>
+      <div class="item"><div class="k">Confirmed last day</div><div class="v">${S.confirmedLwd}</div></div>
       <div class="item"><div class="k">Notice served</div><div class="v">${S.noticeServed} days</div></div>
-      <div class="item"><div class="k">Early release</div><div class="v">${S.earlyRelease}</div></div>
-      <div class="item"><div class="k">Decided by</div><div class="v">${S.decidedBy}</div></div></div>`;
+      <div class="item"><div class="k">Accepted by (HR)</div><div class="v">${S.decidedBy}</div></div></div>`;
   } else {
-    h+=`<div class="note" style="margin:0 0 10px">Status is ${S.status}. HR can re-accept and confirm the last working day.</div>
-      <div class="row-flex"><button class="btn btn-primary" ${isHR()?'':'disabled'} onclick="(function(){S.status='Accepted';log('Re-accepted','HR');render();toast('Re-accepted');})()">${icon('i-check')} Accept &amp; confirm last day</button>
-      <button class="btn btn-danger" ${isHR()?'':'disabled'} onclick="toast('Reject form…')">${icon('i-x')} Reject</button><span class="rolehint">HR / Admin</span></div>`;
+    // Step 1: manager approval status
+    h+=`<div class="row-flex" style="margin-bottom:12px">
+        <span class="stage-num ${S.mgrApproved?'n-done':'n-now'}" style="width:24px;height:24px">${S.mgrApproved?icon('i-check'):'1'}</span>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700">Manager approval ${S.mgrApproved?'· '+S.mgrApprovedBy:'(required first)'}</div>
+        <div class="cs" style="color:var(--text3)">The reporting manager approves before HR confirms.</div></div>
+        ${S.mgrApproved?'<span class="badge b-ok">Approved</span>':`<button class="btn btn-primary" ${isMgr()&&done(2)?'':'disabled'} onclick="mgrApprove()">${icon('i-check')} Approve</button>`}</div>`;
+    // Step 2: HR accept — gated on manager approval
+    h+=`<div class="row-flex">
+        <span class="stage-num ${S.mgrApproved?'n-now':'n-wait'}" style="width:24px;height:24px">2</span>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700">HR accept &amp; confirm last day</div>
+        <div class="cs" style="color:var(--text3)">${S.mgrApproved?'HR confirms the last working day, or rejects.':'Waiting for manager approval.'}</div></div></div>
+      <div class="row-flex" style="margin-top:10px"><button class="btn btn-primary" ${isHR()&&S.mgrApproved?'':'disabled'} onclick="acceptAction()">${icon('i-check')} Accept &amp; confirm last day</button>
+      <button class="btn btn-danger" ${isHR()&&done(2)?'':'disabled'} onclick="toast('Reject form…')">${icon('i-x')} Reject</button><span class="rolehint">HR / Admin</span></div>`;
   }
   h+=undoBtn(3,'Undo acceptance')+`</div></div>`;
 
@@ -426,43 +473,55 @@ function stagesColumn(){
        <div><div class="ct">${a.t}</div></div><span class="right cs">${a.o}</span></div>`).join('')+
      `<div class="note">${isHR()?'Tick items as they are returned / access revoked.':'IT &amp; Admin update this.'}</div>${undoBtn(5,'Undo asset recovery')}</div></div>`;
 
-  // Stage 6 no-dues
-  h+=`<div class="stage ${S.open===6?'open':''}">${stageHead(6,'All departments sign off before the relieving letter')}<div class="stage-body">`+
+  // Stage 6 — No-Dues clearance + F&F (with the F&F Settlement Statement document; Admin/HR only)
+  h+=`<div class="stage ${S.open===6?'open':''}">${stageHead(6,'Clearance sign-offs, then compute & issue the F&F statement')}<div class="stage-body">`;
+  h+=`<h5 style="margin:0 0 8px;font-size:11.5px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">${icon('i-shield')} No-Dues clearance</h5>`+
      S.noDues.map((x,i)=>{
        const canSign = isHR() || (isMgr() && x.d==='Reporting Manager');
        return `<div class="sign"><span class="dept-ic">${icon(x.icon,18)}</span>
          <div><div class="dt">${x.d}</div><div class="dd">${x.desc}</div></div>
          <span class="right">${x.signed?'<span class="badge b-ok">'+icon('i-check')+' Signed</span>':`<button class="btn" ${canSign?'':'disabled'} onclick="signDept(${i})">Sign off</button>`}</span></div>`;
-     }).join('')+undoBtn(6,'Undo all sign-offs')+`</div></div>`;
+     }).join('');
+  // F&F summary + statement — only Admin/HR
+  if(isHR()){
+    h+=`<div class="divider"></div>
+      <h5 style="margin:0 0 8px;font-size:11.5px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">${icon('i-dollar')} Full &amp; Final settlement</h5>
+      <div class="fnf"><div><h5>Earnings</h5>
+        <div class="ln"><span>Last month salary (pro-rated)</span><span>₹ 42,000</span></div>
+        <div class="ln"><span>Leave encashment</span><span>₹ 4,500</span></div>
+        <div class="ln"><span>Reimbursements</span><span>₹ 1,200</span></div>
+        <div class="ln"><span>Gratuity</span><span>₹ 0</span></div>
+        <div class="tot"><span>Total earnings</span><span>₹ 47,700</span></div></div>
+        <div><h5>Deductions</h5>
+        <div class="ln"><span>Notice shortfall (2 days)</span><span>₹ 8,000</span></div>
+        <div class="ln"><span>Leave during notice</span><span>₹ 0</span></div>
+        <div class="ln"><span>Advances / loans</span><span>₹ 0</span></div>
+        <div class="ln"><span>Statutory (PF / PT / TDS)</span><span>₹ 0</span></div>
+        <div class="tot"><span>Total deductions</span><span>₹ 8,000</span></div></div></div>
+      <div class="net"><span class="l">Net payable</span><span class="v">₹ 39,700</span></div>
+      <div class="row-flex" style="margin-top:12px"><button class="btn ${S.fnfApproved?'':'btn-primary'}" ${!S.fnfApproved?'':'disabled'} onclick="approveFnf()">${icon('i-check')} ${S.fnfApproved?'F&F approved':'Approve F&F'}</button><span class="rolehint">Finance / HR only</span></div>
+      <div style="margin-top:14px">`+docCard('fnf','F&F Settlement Statement','i-dollar','info',false)+`</div>`;
+    const fnfReady = noDuesDone() && S.fnfApproved;
+    h+=`<div class="banner banner-blue" style="margin:14px 0 0"><span class="bi bi-blue">${icon('i-file',17)}</span><div style="flex:1">
+        <div class="bt">Issue F&amp;F Settlement Statement</div>
+        <div class="bd">${fnfReady?'Ready to issue & email the F&F statement to the employee.':'Enabled once all No-Dues sign-offs are complete and F&F is approved.'}</div>
+        <div class="row-flex" style="margin-top:11px"><button class="btn btn-primary" ${fnfReady&&!S.docs.fnf.released?'':'disabled'} onclick="releaseFnf()">${icon('i-mail')} ${S.docs.fnf.released?'F&F statement issued':'Issue & email F&F statement'}</button><span class="rolehint">HR / Admin only</span></div></div></div>`;
+  } else {
+    h+=`<div class="note" style="margin-top:12px">${icon('i-lock')} Full &amp; Final settlement and the F&F statement are managed by Finance / HR.</div>`;
+  }
+  h+=undoBtn(6,'Undo No-Dues & F&F')+`</div></div>`;
 
-  // Stage 7 F&F + docs
-  const relReady = noDuesDone() && S.fnfApproved;
-  h+=`<div class="stage ${S.open===7?'open':''}">${stageHead(7,'Compute dues; issue relieving, experience & F&F documents — released together')}<div class="stage-body">
-    <div class="fnf"><div><h5>Earnings</h5>
-      <div class="ln"><span>Last month salary (pro-rated)</span><span>₹ 42,000</span></div>
-      <div class="ln"><span>Leave encashment</span><span>₹ 4,500</span></div>
-      <div class="ln"><span>Reimbursements</span><span>₹ 1,200</span></div>
-      <div class="ln"><span>Gratuity</span><span>₹ 0</span></div>
-      <div class="tot"><span>Total earnings</span><span>₹ 47,700</span></div></div>
-      <div><h5>Deductions</h5>
-      <div class="ln"><span>Notice shortfall (2 days)</span><span>₹ 8,000</span></div>
-      <div class="ln"><span>Leave during notice</span><span>₹ 0</span></div>
-      <div class="ln"><span>Advances / loans</span><span>₹ 0</span></div>
-      <div class="ln"><span>Statutory (PF / PT / TDS)</span><span>₹ 0</span></div>
-      <div class="tot"><span>Total deductions</span><span>₹ 8,000</span></div></div></div>
-    <div class="net"><span class="l">Net payable</span><span class="v">₹ 39,700</span></div>
-    <div class="row-flex" style="margin-top:12px"><button class="btn ${S.fnfApproved?'':'btn-primary'}" ${isHR()&&!S.fnfApproved?'':'disabled'} onclick="approveFnf()">${icon('i-check')} ${S.fnfApproved?'F&F approved':'Approve F&F'}</button><span class="rolehint">Finance / HR</span></div>
-    <div class="divider"></div>
-    <h5 style="margin:0 0 5px;font-size:11.5px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">Exit documents</h5>
-    <div class="note" style="margin:0 0 13px">Three documents are issued together once No-Dues is complete and F&F is approved.</div>`;
-  h+=docCard('experience','Experience Letter','i-file','success',true);
+  // Stage 7 — Relieving & Experience letters (final step, released together)
+  const lettersReady = done(6);
+  h+=`<div class="stage ${S.open===7?'open':''}">${stageHead(7,'Issue the relieving & experience letters — released together')}<div class="stage-body">
+    <div class="note" style="margin:0 0 13px">The relieving and experience letters are issued together once No-Dues clearance and the F&F settlement (Stage 6) are complete.</div>`;
   h+=docCard('relieving','Relieving Letter','i-file','warn',false);
-  h+=docCard('fnf','F&F Settlement Statement','i-dollar','info',false);
+  h+=docCard('experience','Experience Letter','i-file','success',false);
   h+=`<div class="banner banner-blue" style="margin:14px 0 0"><span class="bi bi-blue">${icon('i-pkg',17)}</span><div style="flex:1">
-      <div class="bt">Issue all documents together</div>
-      <div class="bd">Releases relieving, experience &amp; F&F to the employee in one step. ${relReady?'Ready to release.':'Enabled once Stage 6 (No-Dues) is complete and F&F is approved.'}</div>
-      <div class="row-flex" style="margin-top:11px"><button class="btn btn-primary" ${isHR()&&relReady?'':'disabled'} onclick="releaseAll()">${icon('i-mail')} Release &amp; email all 3 documents</button><span class="rolehint">HR / Admin</span></div></div></div>`;
-  h+=undoBtn(7,'Undo document release')+`</div></div>`;
+      <div class="bt">Issue both letters together</div>
+      <div class="bd">Releases the relieving &amp; experience letters to the employee in one step. ${lettersReady?'Ready to release.':'Enabled once Stage 6 (No-Dues & F&F) is complete.'}</div>
+      <div class="row-flex" style="margin-top:11px"><button class="btn btn-primary" ${isHR()&&lettersReady?'':'disabled'} onclick="releaseLetters()">${icon('i-mail')} Release &amp; email both letters</button><span class="rolehint">HR / Admin</span></div></div></div>`;
+  h+=undoBtn(7,'Undo letter release')+`</div></div>`;
   return h;
 }
 function docCard(key,name,ic,tone,canEmail){
@@ -511,12 +570,51 @@ function render(){
   ['admin','manager','employee'].forEach(r=>$('#tab-'+r).classList.toggle('on',S.role===r));
   if(S.role==='employee'){ $('#app').innerHTML=`<div class="page">${employeeView()}</div>`; return; }
   const roleLabel = S.role==='admin'?'Admin / HR':'Reporting Manager';
+  if(S.status==='None'){
+    $('#app').innerHTML=`<div class="page">
+      <a class="back" onclick="toast('Back to Offboarding list')">${icon('i-back')} Back to Offboarding · viewing as <b>&nbsp;${roleLabel}</b></a>
+      ${idcard()}
+      <div class="stage" style="margin-top:16px"><div class="stage-body" style="border:0;text-align:center;padding:40px">
+        <div style="font-size:15px;font-weight:800">No active resignation for this employee</div>
+        <div class="note" style="margin-top:6px">When the employee applies from their portal (Employee tab → Apply for resignation), it appears here for acknowledgement and decision. Use “Fresh start” then the Employee tab to demo the apply flow.</div>
+      </div></div></div>`;
+    return;
+  }
   $('#app').innerHTML=`<div class="page">
     <a class="back" onclick="toast('Back to Offboarding list')">${icon('i-back')} Back to Offboarding · viewing as <b>&nbsp;${roleLabel}</b></a>
     ${idcard()}${stepper()}${attnBar()}
     <div class="grid"><div>${stagesColumn()}</div>${sidebar()}</div></div>`;
 }
+function applyScreen(){
+  return `<div class="hero" style="background:linear-gradient(135deg,#334155,#475569)">
+      <div class="h-status">Offboarding</div>
+      <div class="h-big">You don't have an active resignation</div>
+      <div class="h-sub">If you've decided to move on, you can apply for resignation below. HR and your reporting manager will be notified.</div></div>
+    <div class="grid" style="margin-top:18px"><div>
+      <div class="sech">${icon('i-file')} Apply for resignation</div>
+      <div class="scard">
+        <div class="fieldlbl" style="font-size:12px;font-weight:700;color:var(--text2);margin:2px 0 6px">Proposed last working day</div>
+        <input id="apLwd" placeholder="e.g. 02 Aug 2026" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px"/>
+        <div class="fieldlbl" style="font-size:12px;font-weight:700;color:var(--text2);margin:2px 0 6px">Reason for leaving</div>
+        <select id="apReason" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px;background:#fff">
+          <option>Better Opportunity</option><option>Higher Education</option><option>Personal Reasons</option>
+          <option>Relocation</option><option>Health Issues</option><option>Family Reasons</option><option>Other</option></select>
+        <label class="row-flex" style="gap:8px;margin-bottom:14px;cursor:pointer"><input id="apEarly" type="checkbox"/> <span style="font-size:13px">Request early release (waive part of notice period)</span></label>
+        <div class="fieldlbl" style="font-size:12px;font-weight:700;color:var(--text2);margin:2px 0 6px">Note (optional)</div>
+        <textarea id="apNote" placeholder="Anything HR should know…" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;min-height:64px;margin-bottom:14px"></textarea>
+        <button class="btn btn-primary btn-block" onclick="applyResignation()">${icon('i-check')} Submit resignation</button>
+        <div class="note">Your notice period is <b>30 days</b> (team members). After you submit, your manager acknowledges and HR confirms your last working day.</div>
+      </div>
+    </div>
+    <div class="side"><div class="scard"><h4>Your details</h4>
+      <div class="fact"><span class="k">Name</span><span class="v">${S.emp.name}</span></div>
+      <div class="fact"><span class="k">Employee ID</span><span class="v">${S.emp.code}</span></div>
+      <div class="fact"><span class="k">Designation</span><span class="v">${S.emp.title}</span></div>
+      <div class="fact"><span class="k">Department</span><span class="v">${S.emp.dept}</span></div>
+      <div class="fact"><span class="k">Notice period</span><span class="v">${S.noticeReq} days</span></div></div></div></div>`;
+}
 function employeeView(){
+  if(S.status==='None') return applyScreen();
   const cur=current();
   const pct={1:8,2:24,3:40,4:56,5:70,6:85,7:95,8:100}[cur];
   const ret=S.assets.filter(a=>['Laptop & charger','Mobile / SIM','ID & access cards, locker key'].includes(a.t));
@@ -562,12 +660,6 @@ function employeeView(){
         <div style="flex:1"><div class="tt">Return company items by your last day</div>
         <div class="td">IT &amp; Admin will collect these. Bring them in before ${S.confirmedLwd}.</div>
         <div class="return-list">${ret.map(a=>`<span class="ret ${a.done?'done':''}">${icon(a.t.includes('Laptop')?'i-laptop':a.t.includes('Mobile')?'i-bell':'i-key')} ${a.t.replace(', locker key','')}</span>`).join('')}</div></div></div>
-
-      <div class="sech" style="margin-top:24px">${icon('i-msg')} Messages from HR &amp; your manager</div>
-      <div class="scard">
-        ${S.empMsgs.map(m=>`<div class="cmt"><div class="ava" ${m.cls==='hr'?'style="background:var(--info-bg);color:var(--info)"':m.cls==='me'?'style="background:var(--primary-muted);color:var(--primary-dark)"':''}>${m.init}</div>
-          <div><div><span class="who">${m.who}</span><span class="when">${m.when}</span></div><div class="body">${m.body}</div></div></div>`).join('')}
-        <div class="cmt-box"><input id="empIn" placeholder="Reply to HR / your manager…"/><button class="btn btn-primary" onclick="empReply()">Send</button></div></div>
 
       <div class="sech" style="margin-top:24px">${icon('i-file')} Your documents</div>
       ${docRow('Experience Letter',exp,'')}
