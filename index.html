@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Exit Process — Clickable Prototype</title>
+<style>
+  :root{
+    --bg:#f1f5f9; --card:#ffffff; --panel:#f8fafc; --border:#e8edf3;
+    --text:#0f172a; --text2:#475569; --text3:#94a3b8;
+    --primary:#0ea5b7; --primary-dark:#0e7490; --primary-muted:#e6f6f9;
+    --success:#16a34a; --success-bg:#e9f9ef;
+    --warn:#d97706; --warn-bg:#fef4e3;
+    --danger:#dc2626; --danger-bg:#fef2f2;
+    --info:#2563eb; --info-bg:#eff6ff;
+    --purple:#7c3aed; --purple-bg:#f3eefe;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);padding:0 0 90px}
+  .ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px}
+  .page{max-width:1180px;margin:0 auto;padding:0 20px}
+  button{font-family:inherit}
+
+  .topbar{position:sticky;top:0;z-index:30;background:rgba(241,245,249,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);padding:13px 0;margin-bottom:20px}
+  .topbar .page{display:flex;align-items:center;gap:14px}
+  .brand{font-size:14px;font-weight:800;color:var(--text2);display:flex;align-items:center;gap:8px}
+  .seg{margin-left:auto;display:inline-flex;background:#e6ecf3;border-radius:11px;padding:4px;gap:4px}
+  .seg button{border:0;background:transparent;font-size:13px;font-weight:700;color:var(--text2);padding:9px 15px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px}
+  .seg button.on{background:#fff;color:var(--primary-dark);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+  .reset{border:1px solid var(--border);background:#fff;color:var(--text2);font-size:12px;font-weight:700;padding:8px 11px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:6px}
+
+  a.back{display:inline-flex;align-items:center;gap:6px;color:var(--primary-dark);font-size:13px;font-weight:600;text-decoration:none;margin-bottom:14px;cursor:pointer}
+
+  .idcard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 22px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .avatar{width:56px;height:56px;border-radius:15px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:grid;place-items:center;font-size:20px;font-weight:800;flex:none}
+  .id-name{font-size:21px;font-weight:800}
+  .id-sub{font-size:13px;color:var(--text2);margin-top:3px}
+  .id-right{margin-left:auto;text-align:right}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;background:var(--primary-muted);color:var(--primary-dark)}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .lwd{font-size:13px;color:var(--text2);margin-top:8px}
+  .lwd b{color:var(--text)}
+
+  .stepper{display:flex;gap:4px;margin:18px 0;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px;overflow-x:auto;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .step{flex:1;min-width:118px;display:flex;flex-direction:column;gap:7px;cursor:pointer}
+  .step .dotrow{display:flex;align-items:center;gap:6px}
+  .step .dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;flex:none;transition:.15s}
+  .step .line{height:3px;flex:1;border-radius:2px;background:#e7edf3}
+  .dot-done{background:var(--success);color:#fff}
+  .dot-now{background:var(--primary);color:#fff;box-shadow:0 0 0 4px var(--primary-muted)}
+  .dot-wait{background:#e7edf3;color:var(--text3)}
+  .line-done{background:var(--success)}
+  .step .slabel{font-size:11.5px;font-weight:700;color:var(--text2)}
+  .step .sowner{font-size:10px;color:var(--text3)}
+  .step.sel .slabel{color:var(--primary-dark)}
+  .step:hover .dot{transform:scale(1.08)}
+
+  .grid{display:grid;grid-template-columns:1fr 336px;gap:16px;align-items:start}
+  @media(max-width:980px){.grid{grid-template-columns:1fr}}
+
+  .attn{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:16px}
+  .attn .lbl{font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+  .tagbtn{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:999px;cursor:pointer;border:0}
+  .tag-amber{background:var(--warn-bg);color:var(--warn)}
+  .tag-blue{background:var(--info-bg);color:var(--info)}
+  .tag-ok{background:var(--success-bg);color:var(--success)}
+
+  .stage{background:var(--card);border:1px solid var(--border);border-radius:16px;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .stage-h{display:flex;align-items:center;gap:13px;padding:15px 18px;cursor:pointer}
+  .stage-num{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:14px;font-weight:800;flex:none}
+  .n-done{background:var(--success-bg);color:var(--success)}
+  .n-now{background:var(--primary-muted);color:var(--primary-dark)}
+  .n-wait{background:#eef2f6;color:var(--text3)}
+  .stage-title{font-size:15px;font-weight:800}
+  .stage-meta{font-size:12px;color:var(--text3);margin-top:2px}
+  .owner-tag{margin-left:auto;font-size:11px;font-weight:700;color:var(--text2);background:var(--panel);border:1px solid var(--border);padding:5px 10px;border-radius:999px;white-space:nowrap}
+  .chev{margin-left:8px;color:var(--text3);transition:.15s}
+  .stage.open .chev{transform:rotate(90deg)}
+  .stat{font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:.3px}
+  .s-done{background:var(--success-bg);color:var(--success)}
+  .s-now{background:var(--primary-muted);color:var(--primary-dark)}
+  .s-wait{background:#eef2f6;color:var(--text3)}
+  .stage-body{padding:16px 18px;border-top:1px solid var(--border)}
+  .stage:not(.open) .stage-body{display:none}
+
+  .kv{display:flex;flex-wrap:wrap;gap:14px 24px}
+  .kv .item{min-width:140px}
+  .kv .k{font-size:11px;color:var(--text3)}
+  .kv .v{font-size:14px;font-weight:700;margin-top:3px}
+  .row-flex{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .divider{height:1px;background:var(--border);margin:14px 0}
+
+  .btn{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;border-radius:10px;padding:9px 14px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text2);white-space:nowrap}
+  .btn:hover{border-color:var(--primary)}
+  .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-success{background:var(--success);border-color:var(--success);color:#fff}
+  .btn-danger{background:#fff;border-color:#f3c7c7;color:var(--danger)}
+  .btn-block{width:100%;justify-content:center}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .btn[disabled]:hover{border-color:var(--border)}
+  .rolehint{font-size:11px;color:var(--text3)}
+  .newtag{font-size:9px;font-weight:800;letter-spacing:.4px;background:var(--purple-bg);color:var(--purple);padding:2px 6px;border-radius:5px;vertical-align:1px}
+
+  .badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px}
+  .b-ok{background:var(--success-bg);color:var(--success)}
+  .b-draft{background:var(--warn-bg);color:var(--warn)}
+  .b-lock{background:#eef2f6;color:var(--text3)}
+  .docname{font-size:14px;font-weight:700}
+  .meta{font-size:12px;color:var(--text3)}
+
+  .cmt{display:flex;gap:11px;margin-bottom:13px}
+  .cmt .ava{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:11px;font-weight:800;flex:none;background:var(--purple-bg);color:var(--purple)}
+  .cmt .who{font-size:12.5px;font-weight:700}
+  .cmt .when{font-size:11px;color:var(--text3);margin-left:6px}
+  .cmt .body{font-size:13px;color:var(--text);margin-top:2px;line-height:1.45}
+  .cmt-box{display:flex;gap:8px;margin-top:4px}
+  .cmt-box input{flex:1;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px}
+
+  .banner{display:flex;gap:13px;align-items:flex-start;border-radius:13px;padding:14px 16px;margin-bottom:14px}
+  .banner-amber{background:var(--warn-bg);border:1px solid #f4e2bd}
+  .banner-blue{background:var(--info-bg);border:1px solid #cfe0fb}
+  .banner-green{background:var(--success-bg);border:1px solid #bce6cb}
+  .banner .bi{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:17px}
+  .bi-amber{background:#fbe3b8;color:var(--warn)} .bi-blue{background:#d6e6ff;color:var(--info)} .bi-green{background:#c4ecd1;color:var(--success)}
+  .banner .bt{font-size:13.5px;font-weight:800}
+  .banner .bd{font-size:12.5px;color:var(--text2);margin-top:3px;line-height:1.45}
+
+  .chk{display:flex;align-items:center;gap:13px;padding:12px 0;border-bottom:1px solid var(--border)}
+  .chk:last-child{border-bottom:none}
+  .chk .box{width:24px;height:24px;border-radius:7px;border:2px solid #d7dee6;display:grid;place-items:center;font-size:13px;color:#fff;flex:none;cursor:pointer}
+  .chk .box.on{background:var(--success);border-color:var(--success)}
+  .chk .ct{font-size:13.5px;font-weight:600}
+  .chk .cs{font-size:11.5px;color:var(--text3);margin-top:1px}
+  .chk .right{margin-left:auto}
+
+  .sign{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--border)}
+  .sign:last-child{border-bottom:none}
+  .dept-ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;background:var(--panel);color:var(--primary-dark)}
+  .sign .dt{font-size:13.5px;font-weight:700}
+  .sign .dd{font-size:11.5px;color:var(--text3);margin-top:1px}
+
+  .fnf{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:560px){.fnf{grid-template-columns:1fr}}
+  .fnf h5{margin:0 0 8px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--text2)}
+  .fnf .ln{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
+  .fnf .tot{display:flex;justify-content:space-between;font-size:13px;font-weight:800;border-top:1px solid var(--border);margin-top:6px;padding-top:8px}
+  .net{margin-top:14px;background:var(--primary-muted);border-radius:13px;padding:15px 18px;display:flex;justify-content:space-between;align-items:center}
+  .net .l{font-size:12px;font-weight:800;color:var(--primary-dark);text-transform:uppercase;letter-spacing:.4px}
+  .net .v{font-size:23px;font-weight:800;color:var(--primary-dark)}
+  .doc{border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:11px}
+  .doc-ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:none}
+
+  .side{position:sticky;top:84px;display:flex;flex-direction:column;gap:14px}
+  .scard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:17px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .scard h4{margin:0 0 13px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--text2);display:flex;align-items:center;gap:7px}
+  .fact{display:flex;justify-content:space-between;font-size:13px;padding:6px 0}
+  .fact .k{color:var(--text2)} .fact .v{font-weight:700}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:11px}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600}
+  .chip .x{color:var(--text3);cursor:pointer;font-weight:800;display:flex}
+  .chip .who{display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:var(--primary);color:#fff;font-size:9px;font-weight:800}
+  .note{font-size:11.5px;color:var(--text3);margin-top:9px;line-height:1.5}
+  .tl .ev{position:relative;padding-left:18px;padding-bottom:14px}
+  .tl .ev::before{content:"";position:absolute;left:0;top:3px;width:10px;height:10px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 3px var(--primary-muted)}
+  .tl .ev::after{content:"";position:absolute;left:4px;top:13px;bottom:-1px;width:2px;background:var(--border)}
+  .tl .ev:last-child::after{display:none}
+  .tl .et{font-size:12.5px;font-weight:700}
+  .tl .ed{font-size:11px;color:var(--text3);margin-top:1px}
+
+  .hero{background:linear-gradient(135deg,#0e7490,#0ea5b7);border-radius:18px;padding:24px 26px;color:#fff;box-shadow:0 6px 18px rgba(14,116,144,.25)}
+  .hero .h-status{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.85}
+  .hero .h-big{font-size:24px;font-weight:800;margin:6px 0 4px}
+  .hero .h-sub{font-size:14px;opacity:.92}
+  .hero .h-bar{height:8px;border-radius:5px;background:rgba(255,255,255,.28);margin-top:18px;overflow:hidden}
+  .hero .h-bar i{display:block;height:100%;background:#fff;border-radius:5px;transition:width .3s}
+  .hero .h-mile{display:flex;justify-content:space-between;margin-top:10px;font-size:11px}
+  .hero .h-mile span{opacity:.78}
+  .hero .h-mile span:last-child{text-align:right}
+  .hero .h-mile span.active{opacity:1}
+  .hero .h-mile b{display:block;font-weight:700}
+  .hero .h-mile .d{font-weight:400;opacity:.85}
+  .sech{font-size:15px;font-weight:800;margin:22px 0 12px;display:flex;align-items:center;gap:8px}
+  .todo{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:15px 17px;margin-bottom:12px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .todo .tic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;flex:none}
+  .ti-now{background:var(--primary-muted);color:var(--primary-dark)} .ti-wait{background:#eef2f6;color:var(--text3)} .ti-done{background:var(--success-bg);color:var(--success)}
+  .todo .tt{font-size:14.5px;font-weight:700}
+  .todo .td{font-size:12.5px;color:var(--text2);margin-top:3px;line-height:1.5}
+  .return-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .ret{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:7px 11px;color:var(--text2)}
+  .ret.done{background:var(--success-bg);border-color:#bce6cb;color:var(--success)}
+
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#0f172a;color:#fff;padding:11px 18px;border-radius:11px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:50;display:flex;align-items:center;gap:8px}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-laptop" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="11" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.6 7.6a5 5 0 1 0-1.4 1.4l3.5 3.5 2-2 2 2 2-2-2-2 3.5-3.5z"/></symbol>
+  <symbol id="i-dollar" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+  <symbol id="i-paperclip" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+  <symbol id="i-pkg" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></symbol>
+</svg>
+
+<div class="topbar"><div class="page">
+  <span class="brand"><svg class="ic" style="font-size:18px"><use href="#i-shield"/></svg> MIPL · Exit Process <span class="newtag">PROTOTYPE</span></span>
+  <div class="seg">
+    <button id="tab-admin" onclick="setRole('admin')"><svg class="ic"><use href="#i-shield"/></svg> Admin / HR</button>
+    <button id="tab-manager" onclick="setRole('manager')"><svg class="ic"><use href="#i-users"/></svg> Manager</button>
+    <button id="tab-employee" onclick="setRole('employee')"><svg class="ic"><use href="#i-user"/></svg> Employee</button>
+  </div>
+  <button class="reset" onclick="resetState()"><svg class="ic"><use href="#i-redo"/></svg> Reset</button>
+</div></div>
+
+<div id="app"></div>
+<div id="toast"></div>
+
+<script>
+/* ---------------- state ---------------- */
+const STAGES=[
+  {n:1,title:'Resignation',owner:'Employee'},
+  {n:2,title:'Acknowledge',owner:'Reporting Manager'},
+  {n:3,title:'Decision',owner:'Manager + HR'},
+  {n:4,title:'Knowledge Transfer',owner:'Manager + Employee'},
+  {n:5,title:'Asset Recovery',owner:'IT + Admin'},
+  {n:6,title:'No-Dues',owner:'All depts'},
+  {n:7,title:'F&F & Documents',owner:'Finance + HR'},
+];
+function fresh(){return{
+  role:'admin', open:4,
+  emp:{name:'Rahul Mehta',code:'MIPL-0142',title:'Senior Backend Engineer',dept:'Engineering',tenure:'3 yrs 4 mo',initials:'RM'},
+  status:'Accepted',
+  reason:'Better Opportunity', submitted:'02 Jun 2026', proposedLwd:'02 Jul 2026', confirmedLwd:'02 Jul 2026',
+  noticeReq:30, noticeServed:28, earlyRelease:'Granted', decidedBy:'Deep Bhatt · HR',
+  revert:'requested',           // none | requested | approved | declined
+  kt:[{t:'Reassign active project work',s:'Payments service moved to Karan Shah',done:true},
+      {t:'Document handover notes',s:'Uploaded 12 Jun 2026',done:true},
+      {t:'Transfer repository / file ownership',s:'Pending',done:false}],
+  ktSigned:false,
+  assets:[{t:'Laptop & charger',o:'IT',done:false},{t:'Mobile / SIM',o:'IT',done:false},
+          {t:'ID & access cards, locker key',o:'Admin',done:false},{t:'Revoke portal / email / VPN / licences',o:'IT',done:false}],
+  noDues:[{d:'IT',desc:'Assets returned · access revoked',icon:'i-laptop',signed:false},
+          {d:'Admin',desc:'ID / access cards, keys, facilities',icon:'i-key',signed:false},
+          {d:'Finance',desc:'Advances, loans & reimbursements reconciled',icon:'i-dollar',signed:false},
+          {d:'Reporting Manager',desc:'KT & pending deliverables closed',icon:'i-user',signed:false}],
+  fnfApproved:false,
+  docs:{ experience:{rev:4,released:true},  relieving:{rev:1,released:false},  fnf:{rev:1,released:false} },
+  cc:[{n:'Anjali Rao',i:'AR'},{n:'Finance Team',i:'FT'},{n:'IT Helpdesk',i:'IT'}],
+  comments:[{who:'Anjali Rao',init:'AR',when:'03 Jun',body:'Acknowledged. Rahul will document the Payments service handover and brief Karan before his last day.'},
+            {who:'Anjali Rao',init:'AR',when:'10 Jun',body:'KT plan shared. Repo ownership transfer pending.'}],
+  empMsgs:[{who:'Anjali Rao · Manager',init:'AR',cls:'',when:'10 Jun',body:'Thanks Rahul. Please finish the repo ownership transfer and brief Karan this week.'},
+           {who:'Deep Bhatt · HR',init:'DB',cls:'hr',when:'04 Jun',body:'Your resignation is accepted. Confirmed last working day is 02 Jul 2026. Your documents will be shared after clearance.'}],
+  activity:[{t:'Revert requested',d:'16 Jun · Rahul Mehta'},{t:'KT notes uploaded',d:'12 Jun · Anjali Rao'},
+            {t:'Experience letter released',d:'12 Jun · Deep Bhatt'},{t:'Resignation accepted',d:'04 Jun · Deep Bhatt'},
+            {t:'Acknowledged',d:'03 Jun · Anjali Rao'},{t:'Submitted',d:'02 Jun · Rahul Mehta'}],
+};}
+let S = fresh();
+
+/* ---------------- helpers ---------------- */
+const $=s=>document.querySelector(s);
+function icon(id,sz){return `<svg class="ic"${sz?` style="font-size:${sz}px"`:''}><use href="#${id}"/></svg>`;}
+function toast(m){const t=$('#toast');t.innerHTML=icon('i-check')+m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);}
+function log(t,by){S.activity.unshift({t,d:'now · '+by});}
+const isHR=()=>S.role==='admin', isMgr=()=>S.role==='manager';
+const done=n=>{
+  if(n<=2) return true;
+  if(n===3) return S.status==='Accepted';
+  if(n===4) return S.ktSigned;
+  if(n===5) return S.assets.every(a=>a.done);
+  if(n===6) return S.noDues.every(x=>x.signed);
+  if(n===7) return S.docs.relieving.released&&S.docs.fnf.released;
+  return false;
+};
+const current=()=>{for(let n=1;n<=7;n++)if(!done(n))return n;return 8;};
+const noDuesDone=()=>S.noDues.every(x=>x.signed);
+
+/* ---------------- actions ---------------- */
+function setRole(r){S.role=r;S.open=Math.min(current(),7);render();}
+function resetState(){S=fresh();render();toast('Prototype reset');}
+function openStage(n){S.open=(S.open===n?0:n);render();}
+function approveRevert(){S.revert='approved';S.status='Acknowledged';log('Revert approved → Acknowledged',actor());render();toast('Revert approved — status stepped back');}
+function declineRevert(){S.revert='declined';log('Revert declined',actor());render();toast('Revert request declined');}
+function requestRevert(){S.revert='requested';log('Revert requested','Rahul Mehta');render();toast('Revert request sent to HR');}
+function cancelRevert(){S.revert='none';log('Revert request cancelled','Rahul Mehta');render();toast('Revert request cancelled');}
+function toggleKt(i){S.kt[i].done=!S.kt[i].done;S.kt[i].s=S.kt[i].done?'Done':'Pending';render();}
+function signKt(){S.kt.forEach(k=>k.done=true);S.ktSigned=true;log('KT signed off',actor());render();toast('Knowledge transfer signed off');}
+function toggleAsset(i){S.assets[i].done=!S.assets[i].done;log((S.assets[i].done?'Returned: ':'Un-marked: ')+S.assets[i].t,'IT/Admin');render();}
+function signDept(i){S.noDues[i].signed=true;log('No-Dues signed: '+S.noDues[i].d,actor());render();toast(S.noDues[i].d+' signed off');}
+function approveFnf(){S.fnfApproved=true;log('F&F approved',actor());render();toast('F&F approved');}
+function genDoc(k,name){S.docs[k].rev++;render();toast(name+' regenerated (rev '+S.docs[k].rev+')');}
+function rollbackDoc(k,name){S.docs[k].released=false;log(name+' rolled back',actor());render();toast(name+' rolled back to draft');}
+function releaseAll(){S.docs.relieving.released=true;S.docs.fnf.released=true;S.docs.experience.released=true;log('All documents released & emailed',actor());render();toast('All 3 documents released & emailed');}
+function sendDoc(name){toast(name+' emailed to employee');}
+function postComment(){const v=$('#cmtIn').value.trim();if(!v)return;S.comments.push({who:S.role==='manager'?'Anjali Rao':'Deep Bhatt',init:S.role==='manager'?'AR':'DB',when:'now',body:v});render();toast('Comment posted');}
+function empReply(){const v=$('#empIn').value.trim();if(!v)return;S.empMsgs.unshift({who:'Rahul Mehta · You',init:'RM',cls:'me',when:'now',body:v});render();toast('Message sent');}
+function addCc(){const n=prompt('Add a person to CC (name):');if(n){S.cc.push({n,i:n.slice(0,2).toUpperCase()});render();toast(n+' added to CC');}}
+function rmCc(i){const n=S.cc[i].n;S.cc.splice(i,1);render();toast(n+' removed');}
+function uploadHandover(){S.kt[2].done=true;S.kt[2].s='Uploaded now';render();toast('Handover notes uploaded');}
+/* current acting user — every action is stamped with this name in history */
+function actor(){return S.role==='admin'?'Deep Bhatt (HR)':S.role==='manager'?'Anjali Rao (Manager)':'Rahul Mehta';}
+/* undo a completed step (Admin/HR only). Reverts state + logs who did it; the employee view re-derives automatically. */
+function undoStage(n){
+  const who=actor();
+  if(n===3){S.status='Acknowledged';log('Acceptance undone — Accepted → Acknowledged',who);}
+  else if(n===4){S.ktSigned=false;log('KT sign-off undone',who);}
+  else if(n===5){S.assets.forEach(a=>a.done=false);log('Asset & access recovery undone',who);}
+  else if(n===6){S.noDues.forEach(x=>x.signed=false);log('No-Dues clearance undone',who);}
+  else if(n===7){S.docs.relieving.released=false;S.docs.fnf.released=false;log('Document release undone — relieving & F&F back to draft',who);}
+  S.open=n;render();toast('Step undone — recorded in history');
+}
+function undoBtn(n,label){
+  if(!isHR()||!done(n)) return '';
+  return `<div class="divider"></div><div class="row-flex"><button class="btn btn-danger" onclick="undoStage(${n})">${icon('i-undo')} ${label}</button><span class="rolehint">Admin / HR only · recorded in history with your name</span></div>`;
+}
+
+/* ---------------- render: shared bits ---------------- */
+function stepper(){
+  const cur=current();
+  return `<div class="stepper">`+STAGES.map((st,idx)=>{
+    const isDone=done(st.n), isNow=st.n===cur;
+    const dotCls=isDone?'dot-done':isNow?'dot-now':'dot-wait';
+    const dotInner=isDone?icon('i-check'):st.n;
+    const line=idx<6?`<span class="line ${isDone?'line-done':''}"></span>`:'';
+    return `<div class="step ${S.open===st.n?'sel':''}" onclick="openStage(${st.n})">
+      <div class="dotrow"><span class="dot ${dotCls}">${dotInner}</span>${line}</div>
+      <span class="slabel">${st.title}</span><span class="sowner">${st.owner}</span></div>`;
+  }).join('')+`</div>`;
+}
+function idcard(){
+  const cur=current();
+  return `<div class="idcard"><div class="avatar">${S.emp.initials}</div>
+    <div><div class="id-name">${S.emp.name}</div><div class="id-sub">${S.emp.code} · ${S.emp.title} · ${S.emp.dept}</div></div>
+    <div class="id-right"><span class="pill"><span class="dot"></span> ${S.status} · ${cur>7?'Completed':'Stage '+cur+' of 7'}</span>
+    <div class="lwd">Last working day <b>${S.confirmedLwd}</b> · Tenure <b>${S.emp.tenure}</b></div></div></div>`;
+}
+function stageHead(n,extra){
+  const st=STAGES[n-1], isDone=done(n), cur=current();
+  const numCls=isDone?'n-done':n===cur?'n-now':'n-wait';
+  const numInner=isDone?icon('i-check'):n;
+  const stat=isDone?'<span class="stat s-done">Done</span>':n===cur?'<span class="stat s-now">In&nbsp;progress</span>':'<span class="stat s-wait">Waiting</span>';
+  return `<div class="stage-h" onclick="openStage(${n})"><span class="stage-num ${numCls}">${numInner}</span>
+    <div><div class="stage-title">${n} · ${st.title}</div><div class="stage-meta">${extra||st.owner}</div></div>
+    ${stat}<span class="owner-tag" style="margin-left:10px">${st.owner}</span>
+    <span class="chev">${icon('i-chev')}</span></div>`;
+}
+function commentsBlock(canPost){
+  return `<h5 style="margin:0 0 11px;font-size:11.5px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">${icon('i-msg')} Manager comments <span class="newtag">NEW</span></h5>`+
+   S.comments.map(c=>`<div class="cmt"><div class="ava">${c.init}</div><div><div><span class="who">${c.who}</span><span class="when">${c.when}</span></div><div class="body">${c.body}</div></div></div>`).join('')+
+   (canPost?`<div class="cmt-box"><input id="cmtIn" placeholder="Add a comment for HR / the employee…"/><button class="btn btn-primary" onclick="postComment()">Post</button></div>`:'<div class="note">View only in this role.</div>');
+}
+function stagesColumn(){
+  let h='';
+  // revert banner (HR sees actionable; manager sees info)
+  if(S.revert==='requested'){
+    h+=`<div class="banner banner-amber"><span class="bi bi-amber">${icon('i-undo',17)}</span><div style="flex:1">
+      <div class="bt">Revert requested by employee <span class="newtag">NEW</span></div>
+      <div class="bd">Rahul Mehta asked to revert this resignation on 16 Jun 2026 — “Accepted a counter-offer, wish to continue.” Approving steps the status back one stage and notifies the employee.</div>
+      <div class="row-flex" style="margin-top:11px">
+        <button class="btn btn-success" ${isHR()?'':'disabled'} onclick="approveRevert()">${icon('i-check')} Approve revert</button>
+        <button class="btn btn-danger" ${isHR()?'':'disabled'} onclick="declineRevert()">${icon('i-x')} Decline</button>
+        <span class="rolehint">${isHR()?'HR / Admin / Super Admin only':'Only HR / Admin can decide — you can comment'}</span></div></div></div>`;
+  } else if(S.revert==='approved'){
+    h+=`<div class="banner banner-green"><span class="bi bi-green">${icon('i-check',17)}</span><div><div class="bt">Revert approved</div><div class="bd">Status stepped back to Acknowledged. The employee has been notified.</div></div></div>`;
+  } else if(S.revert==='declined'){
+    h+=`<div class="banner banner-amber"><span class="bi bi-amber">${icon('i-x',17)}</span><div><div class="bt">Revert declined</div><div class="bd">The resignation continues as Accepted.</div></div></div>`;
+  }
+
+  // Stage 1
+  h+=`<div class="stage ${S.open===1?'open':''}">${stageHead(1,'Submitted '+S.submitted+' · '+S.reason)}<div class="stage-body">
+    <div class="kv"><div class="item"><div class="k">Reason</div><div class="v">${S.reason}</div></div>
+    <div class="item"><div class="k">Proposed last day</div><div class="v">${S.proposedLwd}</div></div>
+    <div class="item"><div class="k">Notice required</div><div class="v">${S.noticeReq} days</div></div>
+    <div class="item"><div class="k">Early release</div><div class="v">${S.earlyRelease}</div></div></div>
+    <div class="divider"></div><button class="btn" onclick="toast('Opening resignation letter…')">${icon('i-paperclip')} View resignation letter</button></div></div>`;
+
+  // Stage 2 comments
+  h+=`<div class="stage ${S.open===2?'open':''}">${stageHead(2,'03 Jun 2026 · Anjali Rao')}<div class="stage-body">${commentsBlock(isHR()||isMgr())}</div></div>`;
+
+  // Stage 3
+  h+=`<div class="stage ${S.open===3?'open':''}">${stageHead(3,S.status==='Accepted'?'Accepted 04 Jun 2026 · '+S.decidedBy:'Awaiting decision')}<div class="stage-body">`;
+  if(S.status==='Accepted'){
+    h+=`<div class="kv"><div class="item"><div class="k">Confirmed last day</div><div class="v">${S.confirmedLwd}</div></div>
+      <div class="item"><div class="k">Notice served</div><div class="v">${S.noticeServed} days</div></div>
+      <div class="item"><div class="k">Early release</div><div class="v">${S.earlyRelease}</div></div>
+      <div class="item"><div class="k">Decided by</div><div class="v">${S.decidedBy}</div></div></div>`;
+  } else {
+    h+=`<div class="note" style="margin:0 0 10px">Status is ${S.status}. HR can re-accept and confirm the last working day.</div>
+      <div class="row-flex"><button class="btn btn-primary" ${isHR()?'':'disabled'} onclick="(function(){S.status='Accepted';log('Re-accepted','HR');render();toast('Re-accepted');})()">${icon('i-check')} Accept &amp; confirm last day</button>
+      <button class="btn btn-danger" ${isHR()?'':'disabled'} onclick="toast('Reject form…')">${icon('i-x')} Reject</button><span class="rolehint">HR / Admin</span></div>`;
+  }
+  h+=undoBtn(3,'Undo acceptance')+`</div></div>`;
+
+  // Stage 4 KT
+  h+=`<div class="stage ${S.open===4?'open':''}">${stageHead(4,'Due before last working day')}<div class="stage-body">`+
+     S.kt.map((k,i)=>`<div class="chk"><span class="box ${k.done?'on':''}" onclick="toggleKt(${i})">${k.done?icon('i-check'):''}</span>
+       <div><div class="ct">${k.t}</div><div class="cs">${k.s}</div></div></div>`).join('')+
+     `<div class="divider"></div><div class="row-flex">
+       <button class="btn btn-primary" ${(isHR()||isMgr())&&!S.ktSigned?'':'disabled'} onclick="signKt()">${icon('i-check')} ${S.ktSigned?'KT signed off':'Sign off: KT complete'}</button>
+       <span class="rolehint">Reporting Manager / HR</span></div>${undoBtn(4,'Undo KT sign-off')}</div></div>`;
+
+  // Stage 5 assets
+  h+=`<div class="stage ${S.open===5?'open':''}">${stageHead(5,'Recover hardware & revoke access')}<div class="stage-body">`+
+     S.assets.map((a,i)=>`<div class="chk"><span class="box ${a.done?'on':''}" onclick="${isHR()?`toggleAsset(${i})`:''}">${a.done?icon('i-check'):''}</span>
+       <div><div class="ct">${a.t}</div></div><span class="right cs">${a.o}</span></div>`).join('')+
+     `<div class="note">${isHR()?'Tick items as they are returned / access revoked.':'IT &amp; Admin update this.'}</div>${undoBtn(5,'Undo asset recovery')}</div></div>`;
+
+  // Stage 6 no-dues
+  h+=`<div class="stage ${S.open===6?'open':''}">${stageHead(6,'All departments sign off before the relieving letter')}<div class="stage-body">`+
+     S.noDues.map((x,i)=>{
+       const canSign = isHR() || (isMgr() && x.d==='Reporting Manager');
+       return `<div class="sign"><span class="dept-ic">${icon(x.icon,18)}</span>
+         <div><div class="dt">${x.d}</div><div class="dd">${x.desc}</div></div>
+         <span class="right">${x.signed?'<span class="badge b-ok">'+icon('i-check')+' Signed</span>':`<button class="btn" ${canSign?'':'disabled'} onclick="signDept(${i})">Sign off</button>`}</span></div>`;
+     }).join('')+undoBtn(6,'Undo all sign-offs')+`</div></div>`;
+
+  // Stage 7 F&F + docs
+  const relReady = noDuesDone() && S.fnfApproved;
+  h+=`<div class="stage ${S.open===7?'open':''}">${stageHead(7,'Compute dues; issue relieving, experience & F&F documents — released together')}<div class="stage-body">
+    <div class="fnf"><div><h5>Earnings</h5>
+      <div class="ln"><span>Last month salary (pro-rated)</span><span>₹ 42,000</span></div>
+      <div class="ln"><span>Leave encashment</span><span>₹ 4,500</span></div>
+      <div class="ln"><span>Reimbursements</span><span>₹ 1,200</span></div>
+      <div class="ln"><span>Gratuity</span><span>₹ 0</span></div>
+      <div class="tot"><span>Total earnings</span><span>₹ 47,700</span></div></div>
+      <div><h5>Deductions</h5>
+      <div class="ln"><span>Notice shortfall (2 days)</span><span>₹ 8,000</span></div>
+      <div class="ln"><span>Leave during notice</span><span>₹ 0</span></div>
+      <div class="ln"><span>Advances / loans</span><span>₹ 0</span></div>
+      <div class="ln"><span>Statutory (PF / PT / TDS)</span><span>₹ 0</span></div>
+      <div class="tot"><span>Total deductions</span><span>₹ 8,000</span></div></div></div>
+    <div class="net"><span class="l">Net payable</span><span class="v">₹ 39,700</span></div>
+    <div class="row-flex" style="margin-top:12px"><button class="btn ${S.fnfApproved?'':'btn-primary'}" ${isHR()&&!S.fnfApproved?'':'disabled'} onclick="approveFnf()">${icon('i-check')} ${S.fnfApproved?'F&F approved':'Approve F&F'}</button><span class="rolehint">Finance / HR</span></div>
+    <div class="divider"></div>
+    <h5 style="margin:0 0 5px;font-size:11.5px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">Exit documents</h5>
+    <div class="note" style="margin:0 0 13px">Three documents are issued together once No-Dues is complete and F&F is approved.</div>`;
+  h+=docCard('experience','Experience Letter','i-file','success',true);
+  h+=docCard('relieving','Relieving Letter','i-file','warn',false);
+  h+=docCard('fnf','F&F Settlement Statement','i-dollar','info',false);
+  h+=`<div class="banner banner-blue" style="margin:14px 0 0"><span class="bi bi-blue">${icon('i-pkg',17)}</span><div style="flex:1">
+      <div class="bt">Issue all documents together</div>
+      <div class="bd">Releases relieving, experience &amp; F&F to the employee in one step. ${relReady?'Ready to release.':'Enabled once Stage 6 (No-Dues) is complete and F&F is approved.'}</div>
+      <div class="row-flex" style="margin-top:11px"><button class="btn btn-primary" ${isHR()&&relReady?'':'disabled'} onclick="releaseAll()">${icon('i-mail')} Release &amp; email all 3 documents</button><span class="rolehint">HR / Admin</span></div></div></div>`;
+  h+=undoBtn(7,'Undo document release')+`</div></div>`;
+  return h;
+}
+function docCard(key,name,ic,tone,canEmail){
+  const d=S.docs[key];
+  const toneBg={success:'var(--success-bg)',warn:'var(--warn-bg)',info:'var(--info-bg)'}[tone];
+  const toneFg={success:'var(--success)',warn:'var(--warn)',info:'var(--info)'}[tone];
+  const badge=d.released?'<span class="badge b-ok">Released</span>':'<span class="badge b-draft">Draft — not shared</span>';
+  let acts=`<button class="btn" onclick="toast('Opening ${name}…')">${icon('i-eye')} View</button>
+    <button class="btn" ${isHR()?'':'disabled'} onclick="genDoc('${key}','${name}')">${icon('i-redo')} Regenerate</button>
+    <button class="btn" ${isHR()&&d.released?'':'disabled'} onclick="rollbackDoc('${key}','${name}')">${icon('i-undo')} Roll back <span class="newtag">NEW</span></button>
+    <button class="btn" onclick="toast('Downloading ${name}…')">${icon('i-download')} Download <span class="newtag">NEW</span></button>`;
+  if(canEmail) acts+=`<button class="btn btn-primary" ${isHR()?'':'disabled'} onclick="sendDoc('${name}')">${icon('i-mail')} Send by email <span class="newtag" style="background:#fff">NEW</span></button>`;
+  return `<div class="doc"><div class="row-flex"><span class="doc-ic" style="background:${toneBg};color:${toneFg}">${icon(ic,19)}</span>
+    <div style="flex:1"><div class="row-flex"><span class="docname">${name}</span>${badge}</div><div class="meta">Rev ${d.rev}${key==='relieving'&&!d.released?' · awaiting No-Dues':''}</div></div></div>
+    <div class="row-flex" style="gap:8px;margin-top:12px">${acts}</div></div>`;
+}
+function sidebar(){
+  return `<div class="side">
+    <div class="scard"><h4>Exit summary</h4>
+      <div class="fact"><span class="k">Status</span><span class="v">${S.status}</span></div>
+      <div class="fact"><span class="k">Current stage</span><span class="v">${current()>7?'Completed':current()+' · '+STAGES[current()-1].title}</span></div>
+      <div class="fact"><span class="k">Submitted</span><span class="v">${S.submitted}</span></div>
+      <div class="fact"><span class="k">Notice required</span><span class="v">${S.noticeReq} days</span></div>
+      <div class="fact"><span class="k">Notice served</span><span class="v">${S.noticeServed} days</span></div>
+      <div class="fact"><span class="k">Confirmed last day</span><span class="v">${S.confirmedLwd}</span></div>
+      <div class="fact"><span class="k">F&F net payable</span><span class="v">₹ 39,700</span></div></div>
+    <div class="scard"><h4>${icon('i-bell')} Notify · CC <span class="newtag">NEW</span></h4>
+      <div class="chips">${S.cc.map((c,i)=>`<span class="chip"><span class="who">${c.i}</span> ${c.n} ${isHR()?`<span class="x" onclick="rmCc(${i})">${icon('i-x')}</span>`:''}</span>`).join('')}</div>
+      ${isHR()?`<button class="btn btn-block" onclick="addCc()">${icon('i-plus')} Add people</button>`:''}
+      <div class="note">These people get an in-app notification <b>and email</b> on every update. ${isHR()?'HR / Admin can edit this list.':'Managed by HR / Admin.'}</div></div>
+    <div class="scard"><h4>${icon('i-clock')} Activity</h4><div class="tl">${S.activity.slice(0,7).map(e=>`<div class="ev"><div class="et">${e.t}</div><div class="ed">${e.d}</div></div>`).join('')}</div></div>
+  </div>`;
+}
+function attnBar(){
+  const items=[];
+  if(S.revert==='requested'&&isHR()) items.push(`<button class="tagbtn tag-amber" onclick="S.open=0;render()">${icon('i-undo')} Revert request — approve / decline</button>`);
+  if(!S.ktSigned) items.push(`<button class="tagbtn tag-blue" onclick="openStage(4)">${icon('i-check')} KT sign-off due</button>`);
+  else if(!noDuesDone()) items.push(`<button class="tagbtn tag-blue" onclick="openStage(6)">${icon('i-shield')} No-Dues sign-offs pending</button>`);
+  else if(!S.docs.relieving.released) items.push(`<button class="tagbtn tag-ok" onclick="openStage(7)">${icon('i-pkg')} Ready to issue documents</button>`);
+  if(!items.length) items.push(`<span class="rolehint">Nothing needs your attention right now.</span>`);
+  return `<div class="attn"><span class="lbl">Needs attention</span>${items.join('')}</div>`;
+}
+
+/* ---------------- render: views ---------------- */
+function render(){
+  ['admin','manager','employee'].forEach(r=>$('#tab-'+r).classList.toggle('on',S.role===r));
+  if(S.role==='employee'){ $('#app').innerHTML=`<div class="page">${employeeView()}</div>`; return; }
+  const roleLabel = S.role==='admin'?'Admin / HR':'Reporting Manager';
+  $('#app').innerHTML=`<div class="page">
+    <a class="back" onclick="toast('Back to Offboarding list')">${icon('i-back')} Back to Offboarding · viewing as <b>&nbsp;${roleLabel}</b></a>
+    ${idcard()}${stepper()}${attnBar()}
+    <div class="grid"><div>${stagesColumn()}</div>${sidebar()}</div></div>`;
+}
+function employeeView(){
+  const cur=current();
+  const pct={1:8,2:24,3:40,4:56,5:70,6:85,7:95,8:100}[cur];
+  const ret=S.assets.filter(a=>['Laptop & charger','Mobile / SIM','ID & access cards, locker key'].includes(a.t));
+  const exp=S.docs.experience, rel=S.docs.relieving, fnf=S.docs.fnf;
+  function docRow(name,d,lockText){
+    if(d.released) return `<div class="doc"><div class="row-flex"><span class="doc-ic" style="background:var(--success-bg);color:var(--success)">${icon('i-file',19)}</span>
+      <div style="flex:1"><div class="row-flex"><span class="docname">${name}</span><span class="badge b-ok">Ready</span></div><div class="meta">Shared with you</div></div>
+      <button class="btn btn-primary" onclick="toast('Downloading ${name}…')">${icon('i-download')} Download</button></div></div>`;
+    return `<div class="doc"><div class="row-flex"><span class="doc-ic" style="background:#eef2f6;color:var(--text3)">${icon('i-lock',18)}</span>
+      <div style="flex:1"><div class="row-flex"><span class="docname">${name}</span><span class="badge b-lock">Available after clearance</span></div><div class="meta">${lockText}</div></div></div></div>`;
+  }
+  let revertCard='';
+  if(S.revert==='requested'){
+    revertCard=`<div class="scard"><h4>${icon('i-undo')} Changed your mind? <span class="newtag">NEW</span></h4>
+      <div class="banner banner-amber" style="margin:0"><span class="bi bi-amber">${icon('i-clock',16)}</span><div><div class="bt" style="font-size:13px">Revert request sent</div><div class="bd">Waiting for HR to review your request to cancel this resignation.</div></div></div>
+      <button class="btn btn-block" style="margin-top:10px" onclick="cancelRevert()">${icon('i-x')} Cancel revert request</button></div>`;
+  } else if(S.revert==='approved'){
+    revertCard=`<div class="scard"><h4>${icon('i-undo')} Revert</h4><div class="banner banner-green" style="margin:0"><span class="bi bi-green">${icon('i-check',16)}</span><div><div class="bt" style="font-size:13px">Approved — you're staying!</div><div class="bd">HR approved your revert. Your resignation has been stepped back.</div></div></div></div>`;
+  } else {
+    revertCard=`<div class="scard"><h4>${icon('i-undo')} Changed your mind? <span class="newtag">NEW</span></h4>
+      <div class="note" style="margin:0 0 10px">You can ask HR to cancel your resignation. They'll review and approve it.</div>
+      <button class="btn btn-block" onclick="requestRevert()">${icon('i-undo')} Request to revert resignation</button></div>`;
+  }
+  const miles=[{l:'Submitted',s:S.submitted.replace(' 2026','')},{l:'Accepted',s:'04 Jun'},{l:'Handover',s:''},{l:'Clearance',s:''},{l:'Documents',s:''}];
+  const activeIdx = cur<=2?0:cur===3?1:cur===4?2:cur<=6?3:4;
+  const mileRow = `<div class="h-mile">`+miles.map((m,i)=>{
+    const lab=(i===activeIdx?'● ':'')+m.l;
+    return `<span class="${i===activeIdx?'active':''}"><b>${lab}</b>${m.s?`<span class="d">${m.s}</span>`:''}</span>`;
+  }).join('')+`</div>`;
+  return `<div class="hero"><div class="h-status">Your resignation · ${S.status}</div>
+    <div class="h-big">You're on your way out — last day ${S.confirmedLwd}</div>
+    <div class="h-sub">Finish your handover and return company items before then.</div>
+    <div class="h-bar"><i style="width:${pct}%"></i></div>
+    ${mileRow}</div>
+    <div class="grid" style="margin-top:18px"><div>
+      <div class="sech">${icon('i-check')} What you need to do</div>
+      <div class="todo"><span class="tic ${S.ktSigned?'ti-done':'ti-now'}">${icon('i-users',20)}</span>
+        <div style="flex:1"><div class="tt">Complete your knowledge transfer</div>
+        <div class="td">Hand over your projects and files. Your manager Anjali Rao signs this off.</div>
+        <div class="row-flex" style="margin-top:10px"><button class="btn" onclick="uploadHandover()">${icon('i-paperclip')} Upload handover notes</button>
+        <span class="badge ${S.kt.every(k=>k.done)?'b-ok':'b-draft'}" style="align-self:center">${S.kt.filter(k=>k.done).length} of ${S.kt.length} done</span></div></div></div>
+      <div class="todo"><span class="tic ti-wait">${icon('i-laptop',20)}</span>
+        <div style="flex:1"><div class="tt">Return company items by your last day</div>
+        <div class="td">IT &amp; Admin will collect these. Bring them in before ${S.confirmedLwd}.</div>
+        <div class="return-list">${ret.map(a=>`<span class="ret ${a.done?'done':''}">${icon(a.t.includes('Laptop')?'i-laptop':a.t.includes('Mobile')?'i-bell':'i-key')} ${a.t.replace(', locker key','')}</span>`).join('')}</div></div></div>
+
+      <div class="sech" style="margin-top:24px">${icon('i-msg')} Messages from HR &amp; your manager</div>
+      <div class="scard">
+        ${S.empMsgs.map(m=>`<div class="cmt"><div class="ava" ${m.cls==='hr'?'style="background:var(--info-bg);color:var(--info)"':m.cls==='me'?'style="background:var(--primary-muted);color:var(--primary-dark)"':''}>${m.init}</div>
+          <div><div><span class="who">${m.who}</span><span class="when">${m.when}</span></div><div class="body">${m.body}</div></div></div>`).join('')}
+        <div class="cmt-box"><input id="empIn" placeholder="Reply to HR / your manager…"/><button class="btn btn-primary" onclick="empReply()">Send</button></div></div>
+
+      <div class="sech" style="margin-top:24px">${icon('i-file')} Your documents</div>
+      ${docRow('Experience Letter',exp,'')}
+      ${docRow('Relieving Letter',rel,'Issued on / after your last working day')}
+      ${docRow('Full & Final Settlement',fnf,'Shared with your relieving letter, within 30–45 days')}
+    </div>
+    <div class="side">
+      <div class="scard"><h4>Your exit details</h4>
+        <div class="fact"><span class="k">Status</span><span class="v">${S.status}</span></div>
+        <div class="fact"><span class="k">Reason</span><span class="v">${S.reason}</span></div>
+        <div class="fact"><span class="k">Submitted</span><span class="v">${S.submitted}</span></div>
+        <div class="fact"><span class="k">Notice period</span><span class="v">${S.noticeReq} days</span></div>
+        <div class="fact"><span class="k">Last working day</span><span class="v">${S.confirmedLwd}</span></div>
+        <div class="fact"><span class="k">Early release</span><span class="v">${S.earlyRelease}</span></div></div>
+      ${revertCard}
+      <div class="scard"><h4>${icon('i-clock')} Your progress</h4><div class="tl">${S.activity.slice(0,5).map(e=>`<div class="ev"><div class="et">${e.t}</div><div class="ed">${e.d}</div></div>`).join('')}</div></div>
+    </div></div>`;
+}
+
+render();
+</script>
+</body>
+</html>
