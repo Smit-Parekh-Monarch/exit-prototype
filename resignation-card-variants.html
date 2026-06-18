@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>My Resignation — Card UI Variants</title>
+<style>
+  :root{
+    --bg:#eef2f6; --card:#ffffff; --border:#e6eaf0; --divider:#eef1f5;
+    --text:#0f172a; --text2:#64748b; --text3:#94a3b8;
+    --primary:#18B6D9; --primary-muted:#e6f8fc; --primary-dark:#0e8fad;
+    --success:#16a34a; --success-bg:#e9f9ef;
+    --warn:#d97706; --warn-bg:#fef3e2;
+    --danger:#e11d48; --danger-bg:#ffe9ee;
+    --radius:16px;
+    --shadow:0 1px 3px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);padding:32px 20px 80px}
+  .wrap{max-width:920px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--text2);font-size:13px;margin:0 0 8px}
+  .pickhint{background:#fff8e6;border:1px solid #f3e3b0;color:#8a6d1f;padding:10px 14px;border-radius:10px;font-size:13px;margin:14px 0 28px}
+  .vtitle{display:flex;align-items:center;gap:10px;margin:34px 0 12px;font-size:14px;font-weight:800;letter-spacing:.4px;color:var(--text2);text-transform:uppercase}
+  .vtitle .num{background:var(--primary);color:#fff;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:12px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:999px}
+  .pill.ok{background:var(--primary-muted);color:var(--primary-dark)}
+  .pill.green{background:var(--success-bg);color:var(--success)}
+  .lbl{font-size:11px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px}
+  .val{font-size:15px;font-weight:700;color:var(--text)}
+  .muted{color:var(--text2)}
+  .sec{font-size:11px;font-weight:800;letter-spacing:.6px;color:var(--text2);text-transform:uppercase}
+  .divider{height:1px;background:var(--divider)}
+  /* timeline (vertical, connected) */
+  .tl{display:flex;flex-direction:column}
+  .tl .row{display:flex;gap:12px}
+  .tl .rail{width:24px;display:flex;flex-direction:column;align-items:center}
+  .tl .dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;flex:0 0 auto}
+  .tl .dot.done{background:var(--success-bg);color:var(--success)}
+  .tl .dot.todo{background:#f1f5f9;color:var(--text3);border:1.5px solid var(--border)}
+  .tl .line{width:2px;flex:1;margin:2px 0}
+  .tl .line.done{background:var(--success)}
+  .tl .line.todo{background:var(--border)}
+  .tl .body{flex:1;display:flex;justify-content:space-between;padding-bottom:16px}
+  .tl .body .t{font-size:13px;font-weight:600}
+  .tl .body .d{font-size:12px;color:var(--text3)}
+  /* horizontal stepper */
+  .steps{display:flex;align-items:flex-start}
+  .steps .step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;text-align:center}
+  .steps .step .c{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;z-index:2}
+  .steps .step .c.done{background:var(--success);color:#fff}
+  .steps .step .c.todo{background:#fff;border:2px solid var(--border);color:var(--text3)}
+  .steps .step:not(:last-child)::after{content:"";position:absolute;top:15px;left:50%;width:100%;height:3px;z-index:1}
+  .steps .step.done:not(:last-child)::after{background:var(--success)}
+  .steps .step.todo:not(:last-child)::after{background:var(--border)}
+  .steps .step .lab{font-size:12px;font-weight:600;margin-top:8px}
+  .steps .step .dt{font-size:11px;color:var(--text3);margin-top:2px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .tile{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:14px}
+  .tile .big{font-size:20px;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>My Resignation — Card UI Variants</h1>
+  <p class="sub">Same data in 4 layouts. Open this file in a browser.</p>
+  <div class="pickhint">👉 Tell me which to build: just say <b>“use Variant 2”</b> (or mix: “Variant 3 header + Variant 1 timeline”).</div>
+
+  <!-- ============ VARIANT 1 — Refined classic ============ -->
+  <div class="vtitle"><span class="num">1</span> Refined classic — clean KV grid + vertical timeline</div>
+  <div class="card" style="padding:22px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
+      <div class="sec">Status</div>
+      <span class="pill ok">● Accepted</span>
+    </div>
+    <div class="grid2" style="margin-bottom:20px">
+      <div><div class="lbl">Submitted</div><div class="val">11 Jun 2026</div></div>
+      <div><div class="lbl">Proposed Last Day</div><div class="val">16 Jul 2026</div></div>
+      <div><div class="lbl">Confirmed Last Day</div><div class="val">31 Aug 2026</div></div>
+      <div><div class="lbl">Tenure</div><div class="val">6 mo</div></div>
+      <div><div class="lbl">Notice Period</div><div class="val">90 days</div></div>
+      <div><div class="lbl">Notice Given</div><div class="val">81 days</div></div>
+    </div>
+    <div class="divider" style="margin:0 -22px 16px"></div>
+    <div class="sec" style="margin-bottom:14px">Timeline</div>
+    <div class="tl">
+      <div class="row"><div class="rail"><div class="dot done">✓</div><div class="line done"></div></div><div class="body"><span class="t">Submitted</span><span class="d">11 Jun 2026</span></div></div>
+      <div class="row"><div class="rail"><div class="dot done">✓</div><div class="line done"></div></div><div class="body"><span class="t">Acknowledged</span><span class="d">11 Jun 2026</span></div></div>
+      <div class="row"><div class="rail"><div class="dot done">✓</div><div class="line todo"></div></div><div class="body"><span class="t">Accepted</span><span class="d">11 Jun 2026</span></div></div>
+      <div class="row"><div class="rail"><div class="dot todo">○</div></div><div class="body"><span class="t muted">Completed</span><span class="d">—</span></div></div>
+    </div>
+  </div>
+
+  <!-- ============ VARIANT 2 — Hero header + stat tiles + horizontal stepper ============ -->
+  <div class="vtitle"><span class="num">2</span> Hero header + stat tiles + horizontal stepper</div>
+  <div class="card">
+    <div style="background:linear-gradient(120deg,var(--primary),var(--primary-dark));padding:20px 22px;color:#fff">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:12px;opacity:.85;text-transform:uppercase;letter-spacing:.4px">Resignation Status</div>
+          <div style="font-size:22px;font-weight:800;margin-top:2px">Accepted</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;opacity:.85">Last working day</div>
+          <div style="font-size:18px;font-weight:800">31 Aug 2026</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:18px 22px">
+      <div class="grid3" style="margin-bottom:20px">
+        <div class="tile"><div class="lbl">Tenure</div><div class="big">6 mo</div></div>
+        <div class="tile"><div class="lbl">Notice Period</div><div class="big">90<span style="font-size:12px;font-weight:600"> days</span></div></div>
+        <div class="tile"><div class="lbl">Notice Given</div><div class="big">81<span style="font-size:12px;font-weight:600"> days</span></div></div>
+      </div>
+      <div class="steps">
+        <div class="step done"><div class="c done">✓</div><div class="lab">Submitted</div><div class="dt">11 Jun</div></div>
+        <div class="step done"><div class="c done">✓</div><div class="lab">Acknowledged</div><div class="dt">11 Jun</div></div>
+        <div class="step done"><div class="c done">✓</div><div class="lab">Accepted</div><div class="dt">11 Jun</div></div>
+        <div class="step todo"><div class="c todo">4</div><div class="lab muted">Completed</div><div class="dt">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ VARIANT 3 — Split: details left, timeline panel right ============ -->
+  <div class="vtitle"><span class="num">3</span> Split — details left, tinted timeline panel right</div>
+  <div class="card" style="display:flex;flex-wrap:wrap">
+    <div style="flex:1;min-width:280px;padding:22px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="sec">Details</div><span class="pill green">Accepted</span>
+      </div>
+      <div class="grid2">
+        <div><div class="lbl">Submitted</div><div class="val">11 Jun 2026</div></div>
+        <div><div class="lbl">Proposed</div><div class="val">16 Jul 2026</div></div>
+        <div><div class="lbl">Confirmed Last Day</div><div class="val">31 Aug 2026</div></div>
+        <div><div class="lbl">Tenure</div><div class="val">6 mo</div></div>
+        <div><div class="lbl">Notice Period</div><div class="val">90 days</div></div>
+        <div><div class="lbl">Notice Given</div><div class="val">81 days</div></div>
+      </div>
+    </div>
+    <div style="width:300px;background:#f8fafc;border-left:1px solid var(--border);padding:22px">
+      <div class="sec" style="margin-bottom:14px">Progress</div>
+      <div class="tl">
+        <div class="row"><div class="rail"><div class="dot done">✓</div><div class="line done"></div></div><div class="body"><span class="t">Submitted</span><span class="d">11 Jun</span></div></div>
+        <div class="row"><div class="rail"><div class="dot done">✓</div><div class="line done"></div></div><div class="body"><span class="t">Acknowledged</span><span class="d">11 Jun</span></div></div>
+        <div class="row"><div class="rail"><div class="dot done">✓</div><div class="line todo"></div></div><div class="body"><span class="t">Accepted</span><span class="d">11 Jun</span></div></div>
+        <div class="row"><div class="rail"><div class="dot todo">○</div></div><div class="body"><span class="t muted">Completed</span><span class="d">—</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ VARIANT 4 — Compact summary strip + inline progress ============ -->
+  <div class="vtitle"><span class="num">4</span> Compact — summary strip + slim progress bar</div>
+  <div class="card" style="padding:20px 22px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div style="width:42px;height:42px;border-radius:12px;background:var(--primary-muted);display:grid;place-items:center;color:var(--primary-dark);font-size:18px">📄</div>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:800">Resignation in progress</div>
+        <div class="muted" style="font-size:13px">Last working day · <b>31 Aug 2026</b></div>
+      </div>
+      <span class="pill green">Accepted</span>
+    </div>
+    <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:18px">
+      <div style="flex:1;padding:12px 14px;border-right:1px solid var(--border)"><div class="lbl">Tenure</div><div class="val">6 mo</div></div>
+      <div style="flex:1;padding:12px 14px;border-right:1px solid var(--border)"><div class="lbl">Notice Period</div><div class="val">90 days</div></div>
+      <div style="flex:1;padding:12px 14px;border-right:1px solid var(--border)"><div class="lbl">Notice Given</div><div class="val">81 days</div></div>
+      <div style="flex:1;padding:12px 14px"><div class="lbl">Submitted</div><div class="val">11 Jun</div></div>
+    </div>
+    <div class="steps">
+      <div class="step done"><div class="c done">✓</div><div class="lab">Submitted</div></div>
+      <div class="step done"><div class="c done">✓</div><div class="lab">Acknowledged</div></div>
+      <div class="step done"><div class="c done">✓</div><div class="lab">Accepted</div></div>
+      <div class="step todo"><div class="c todo">4</div><div class="lab muted">Completed</div></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

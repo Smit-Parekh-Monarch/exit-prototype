@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Exit Detail Screen — Mockup</title>
+<style>
+  :root{
+    --bg:#eef2f6; --card:#ffffff; --panel:#f4f7fa; --border:#e6eaf0;
+    --text:#0f172a; --text2:#64748b; --text3:#94a3b8;
+    --primary:#18B6D9; --primary-dark:#0e8fad; --primary-muted:#e6f8fc;
+    --success:#16a34a; --success-bg:#e9f9ef;
+    --warn:#d97706; --warn-bg:#fef3e2;
+    --danger:#dc2626; --danger-bg:#fef2f2;
+    --info:#2563eb; --info-bg:#eff6ff;
+    --purple:#7c3aed; --purple-bg:#f3eefe;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);padding:24px 20px 80px}
+  .page{max-width:1200px;margin:0 auto}
+  a.back{display:inline-flex;align-items:center;gap:6px;color:var(--primary-dark);font-size:13px;font-weight:600;text-decoration:none;margin-bottom:14px}
+
+  /* identity header */
+  .idcard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:16px}
+  .avatar{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:grid;place-items:center;font-size:20px;font-weight:700}
+  .id-name{font-size:20px;font-weight:800}
+  .id-sub{font-size:13px;color:var(--text2);margin-top:2px}
+  .id-right{margin-left:auto;text-align:right}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px}
+  .pill-accepted{background:var(--primary-muted);color:var(--primary-dark)}
+  .lwd{font-size:13px;color:var(--text2);margin-top:8px}
+  .lwd b{color:var(--text)}
+
+  /* stepper */
+  .stepper{display:flex;gap:6px;margin:18px 0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;overflow-x:auto}
+  .step{flex:1;min-width:118px;display:flex;flex-direction:column;gap:6px}
+  .step .dotrow{display:flex;align-items:center;gap:6px}
+  .step .dot{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;flex:none}
+  .step .line{height:3px;flex:1;border-radius:2px;background:var(--border)}
+  .dot-done{background:var(--success);color:#fff}
+  .dot-now{background:var(--primary);color:#fff;box-shadow:0 0 0 4px var(--primary-muted)}
+  .dot-wait{background:#e2e8f0;color:var(--text3)}
+  .line-done{background:var(--success)}
+  .step .slabel{font-size:11px;font-weight:700;color:var(--text2)}
+  .step .sowner{font-size:10px;color:var(--text3)}
+  .step.is-now .slabel{color:var(--primary-dark)}
+
+  /* layout */
+  .grid{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start}
+  @media(max-width:980px){.grid{grid-template-columns:1fr}}
+
+  /* stage cards */
+  .stage{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden}
+  .stage-h{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:default}
+  .stage-num{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}
+  .n-done{background:var(--success-bg);color:var(--success)}
+  .n-now{background:var(--primary-muted);color:var(--primary-dark)}
+  .n-wait{background:#eef2f6;color:var(--text3)}
+  .stage-title{font-size:15px;font-weight:800}
+  .stage-meta{font-size:12px;color:var(--text3);margin-top:1px}
+  .owner-tag{margin-left:auto;font-size:11px;font-weight:700;color:var(--text2);background:var(--panel);border:1px solid var(--border);padding:4px 9px;border-radius:999px;white-space:nowrap}
+  .stat{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:.3px}
+  .s-done{background:var(--success-bg);color:var(--success)}
+  .s-now{background:var(--primary-muted);color:var(--primary-dark)}
+  .s-wait{background:#eef2f6;color:var(--text3)}
+  .stage-body{padding:0 16px 16px;border-top:1px solid var(--border);padding-top:14px}
+  .stage.collapsed .stage-body{display:none}
+  .stage.collapsed .stage-h{cursor:pointer}
+
+  /* key-value grid */
+  .kv{display:flex;flex-wrap:wrap;gap:14px 22px}
+  .kv .item{min-width:140px}
+  .kv .k{font-size:11px;color:var(--text3)}
+  .kv .v{font-size:14px;font-weight:700;margin-top:2px}
+
+  .row-flex{display:flex;align-items:center;gap:10px}
+  .divider{height:1px;background:var(--border);margin:14px 0}
+
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;border-radius:9px;padding:8px 13px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text2);white-space:nowrap}
+  .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .btn-success{background:var(--success);border-color:var(--success);color:#fff}
+  .btn-danger{background:#fff;border-color:#f3c7c7;color:var(--danger)}
+  .btn-ghost{background:transparent;border-color:transparent;color:var(--primary-dark)}
+  .rolehint{font-size:11px;color:var(--text3);margin-left:4px}
+
+  /* badges */
+  .badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px}
+  .b-ok{background:var(--success-bg);color:var(--success)}
+  .b-draft{background:var(--warn-bg);color:var(--warn)}
+  .name{font-size:14px;font-weight:700}
+  .meta{font-size:12px;color:var(--text3);margin-top:3px}
+
+  /* comment thread */
+  .cmt{display:flex;gap:10px;margin-bottom:12px}
+  .cmt .ava{width:30px;height:30px;border-radius:8px;background:var(--purple-bg);color:var(--purple);display:grid;place-items:center;font-size:11px;font-weight:800;flex:none}
+  .cmt .who{font-size:12px;font-weight:700}
+  .cmt .when{font-size:11px;color:var(--text3);margin-left:6px}
+  .cmt .body{font-size:13px;color:var(--text);margin-top:2px}
+  .cmt-box{display:flex;gap:8px;margin-top:6px}
+  .cmt-box input{flex:1;border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:13px}
+
+  /* banners */
+  .banner{display:flex;gap:12px;align-items:flex-start;border-radius:12px;padding:13px 14px;margin-bottom:14px}
+  .banner-amber{background:var(--warn-bg);border:1px solid #f3e3b0}
+  .banner .bi{font-size:18px;line-height:1}
+  .banner .bt{font-size:13px;font-weight:800}
+  .banner .bd{font-size:12.5px;color:var(--text2);margin-top:2px}
+
+  /* checklist */
+  .chk{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+  .chk:last-child{border-bottom:none}
+  .chk .box{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:grid;place-items:center;font-size:12px;color:#fff;flex:none}
+  .chk .box.on{background:var(--success);border-color:var(--success)}
+  .chk .ct{font-size:13.5px;font-weight:600}
+  .chk .cs{font-size:11.5px;color:var(--text3)}
+  .chk .right{margin-left:auto}
+
+  /* signoff rows */
+  .sign{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+  .sign:last-child{border-bottom:none}
+  .dept-ic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:15px;flex:none;background:var(--panel)}
+  .sign .dt{font-size:13.5px;font-weight:700}
+  .sign .dd{font-size:11.5px;color:var(--text3)}
+
+  /* settlement */
+  .fnf{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:560px){.fnf{grid-template-columns:1fr}}
+  .fnf h5{margin:0 0 8px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--text2)}
+  .fnf .ln{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
+  .fnf .tot{display:flex;justify-content:space-between;font-size:13px;font-weight:800;border-top:1px solid var(--border);margin-top:6px;padding-top:8px}
+  .net{margin-top:14px;background:var(--primary-muted);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+  .net .l{font-size:12px;font-weight:800;color:var(--primary-dark);text-transform:uppercase;letter-spacing:.4px}
+  .net .v{font-size:22px;font-weight:800;color:var(--primary-dark)}
+
+  /* sidebar */
+  .side{position:sticky;top:16px;display:flex;flex-direction:column;gap:14px}
+  .scard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+  .scard h4{margin:0 0 12px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--text2)}
+  .fact{display:flex;justify-content:space-between;font-size:13px;padding:6px 0}
+  .fact .k{color:var(--text2)}
+  .fact .v{font-weight:700}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:5px 9px;font-size:12px;font-weight:600}
+  .chip .x{color:var(--text3);cursor:pointer;font-weight:800}
+  .chip .who{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--primary);color:#fff;font-size:9px;font-weight:800}
+  .note{font-size:11.5px;color:var(--text3);margin-top:8px;line-height:1.45}
+  .tl{position:relative;padding-left:18px}
+  .tl .ev{position:relative;padding-bottom:13px}
+  .tl .ev::before{content:"";position:absolute;left:-13px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--primary)}
+  .tl .ev::after{content:"";position:absolute;left:-9px;top:12px;bottom:-2px;width:2px;background:var(--border)}
+  .tl .ev:last-child::after{display:none}
+  .tl .et{font-size:12.5px;font-weight:700}
+  .tl .ed{font-size:11px;color:var(--text3)}
+
+  .legend{max-width:1200px;margin:0 auto 16px;background:#fff8e6;border:1px solid #f3e3b0;color:#8a6d1f;padding:11px 15px;border-radius:10px;font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="legend">
+  👉 <b>Mockup — Exit Detail screen</b> (opens when you click an employee in Offboarding). It shows the full 7-stage exit workflow from the SOP. New pieces are tagged
+  <span class="badge b-draft">NEW</span>: CC notify, manager comments, revert-request → approval, letter regenerate / roll-back / download / email.
+  Tell me what to change (layout, sections, wording) before I build it in the app.
+</div>
+
+<div class="page">
+  <a class="back" href="#">‹ Back to Offboarding</a>
+
+  <!-- IDENTITY -->
+  <div class="idcard">
+    <div class="avatar">RM</div>
+    <div>
+      <div class="id-name">Rahul Mehta</div>
+      <div class="id-sub">MIPL-0142 · Senior Backend Engineer · Engineering</div>
+    </div>
+    <div class="id-right">
+      <span class="pill pill-accepted">● Accepted · Stage 4 of 7</span>
+      <div class="lwd">Last working day: <b>02 Jul 2026</b> · Tenure <b>3 yrs 4 mo</b></div>
+    </div>
+  </div>
+
+  <!-- STEPPER -->
+  <div class="stepper">
+    <div class="step"><div class="dotrow"><span class="dot dot-done">✓</span><span class="line line-done"></span></div><span class="slabel">Resignation</span><span class="sowner">Employee</span></div>
+    <div class="step"><div class="dotrow"><span class="dot dot-done">✓</span><span class="line line-done"></span></div><span class="slabel">Acknowledge</span><span class="sowner">Manager</span></div>
+    <div class="step"><div class="dotrow"><span class="dot dot-done">✓</span><span class="line line-done"></span></div><span class="slabel">Decision</span><span class="sowner">Manager + HR</span></div>
+    <div class="step is-now"><div class="dotrow"><span class="dot dot-now">4</span><span class="line"></span></div><span class="slabel">Knowledge Transfer</span><span class="sowner">Manager + Employee</span></div>
+    <div class="step"><div class="dotrow"><span class="dot dot-wait">5</span><span class="line"></span></div><span class="slabel">Asset Recovery</span><span class="sowner">IT + Admin</span></div>
+    <div class="step"><div class="dotrow"><span class="dot dot-wait">6</span><span class="line"></span></div><span class="slabel">No-Dues Clearance</span><span class="sowner">All depts</span></div>
+    <div class="step"><div class="dotrow"><span class="dot dot-wait">7</span></div><span class="slabel">F&F Settlement</span><span class="sowner">Finance + HR</span></div>
+  </div>
+
+  <div class="grid">
+    <!-- MAIN COLUMN -->
+    <div>
+
+      <!-- REVERT REQUEST BANNER (NEW) -->
+      <div class="banner banner-amber">
+        <span class="bi">↩️</span>
+        <div style="flex:1">
+          <div class="bt">Revert requested by employee <span class="badge b-draft">NEW</span></div>
+          <div class="bd">Rahul Mehta asked to revert this resignation on 16 Jun 2026 — reason: “Accepted a counter-offer, wish to continue.” Approving will step the status back one stage (Accepted → Acknowledged).</div>
+          <div class="row-flex" style="margin-top:10px">
+            <span class="btn btn-success">✓ Approve revert</span>
+            <span class="btn btn-danger">✕ Decline</span>
+            <span class="rolehint">HR / Admin / Super Admin only</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 1 -->
+      <div class="stage collapsed">
+        <div class="stage-h" onclick="this.parentElement.classList.toggle('collapsed')">
+          <span class="stage-num n-done">✓</span>
+          <div><div class="stage-title">1 · Resignation</div><div class="stage-meta">Submitted 02 Jun 2026 · Better Opportunity · Early release requested</div></div>
+          <span class="owner-tag">Employee</span>
+        </div>
+        <div class="stage-body">
+          <div class="kv">
+            <div class="item"><div class="k">Reason for leaving</div><div class="v">Better Opportunity</div></div>
+            <div class="item"><div class="k">Proposed last day</div><div class="v">02 Jul 2026</div></div>
+            <div class="item"><div class="k">Notice required</div><div class="v">30 days</div></div>
+            <div class="item"><div class="k">Early release</div><div class="v">Requested</div></div>
+          </div>
+          <div class="divider"></div>
+          <span class="btn"><span>📎</span> View resignation letter</span>
+        </div>
+      </div>
+
+      <!-- STAGE 2 -->
+      <div class="stage">
+        <div class="stage-h">
+          <span class="stage-num n-done">✓</span>
+          <div><div class="stage-title">2 · Acknowledgement</div><div class="stage-meta">Acknowledged 03 Jun 2026 by Anjali Rao (Reporting Manager)</div></div>
+          <span class="owner-tag">Reporting Manager</span>
+        </div>
+        <div class="stage-body">
+          <!-- MANAGER COMMENTS (NEW) -->
+          <h5 style="margin:0 0 10px;font-size:12px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">Manager comments <span class="badge b-draft">NEW</span></h5>
+          <div class="cmt">
+            <div class="ava">AR</div>
+            <div><div><span class="who">Anjali Rao</span><span class="when">03 Jun 2026</span></div>
+              <div class="body">Acknowledged. Rahul will document the Payments service handover and brief Karan before his last day.</div></div>
+          </div>
+          <div class="cmt">
+            <div class="ava">AR</div>
+            <div><div><span class="who">Anjali Rao</span><span class="when">10 Jun 2026</span></div>
+              <div class="body">KT plan shared. Repo ownership transfer pending.</div></div>
+          </div>
+          <div class="cmt-box">
+            <input placeholder="Add a comment for HR / the employee…" />
+            <span class="btn btn-primary">Post</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 3 -->
+      <div class="stage">
+        <div class="stage-h">
+          <span class="stage-num n-done">✓</span>
+          <div><div class="stage-title">3 · Decision</div><div class="stage-meta">Accepted 04 Jun 2026 by Deep Bhatt (HR) · Early release granted</div></div>
+          <span class="owner-tag">Manager + HR</span>
+        </div>
+        <div class="stage-body">
+          <div class="kv">
+            <div class="item"><div class="k">Confirmed last day</div><div class="v">02 Jul 2026</div></div>
+            <div class="item"><div class="k">Notice served</div><div class="v">28 days</div></div>
+            <div class="item"><div class="k">Early release</div><div class="v">Granted</div></div>
+            <div class="item"><div class="k">Decision by</div><div class="v">Deep Bhatt · HR</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 4 (CURRENT) -->
+      <div class="stage">
+        <div class="stage-h">
+          <span class="stage-num n-now">4</span>
+          <div><div class="stage-title">4 · Knowledge Transfer</div><div class="stage-meta">In progress · due before last working day</div></div>
+          <span class="stat s-now">In&nbsp;progress</span>
+          <span class="owner-tag" style="margin-left:10px">Manager + Employee</span>
+        </div>
+        <div class="stage-body">
+          <div class="chk"><span class="box on">✓</span><div><div class="ct">Reassign active project work</div><div class="cs">Payments service moved to Karan Shah</div></div></div>
+          <div class="chk"><span class="box on">✓</span><div><div class="ct">Document handover notes</div><div class="cs">Uploaded 12 Jun 2026</div></div><span class="right btn btn-ghost">View</span></div>
+          <div class="chk"><span class="box"></span><div><div class="ct">Transfer repository / file ownership</div><div class="cs">Pending</div></div></div>
+          <div class="divider"></div>
+          <div class="row-flex"><span class="btn btn-primary">✓ Manager sign-off: KT complete</span><span class="rolehint">Reporting Manager / HR</span></div>
+        </div>
+      </div>
+
+      <!-- STAGE 5 -->
+      <div class="stage">
+        <div class="stage-h">
+          <span class="stage-num n-wait">5</span>
+          <div><div class="stage-title">5 · Asset &amp; Access Recovery</div><div class="stage-meta">Recover hardware &amp; revoke access on / before last day</div></div>
+          <span class="stat s-wait">Waiting</span>
+          <span class="owner-tag" style="margin-left:10px">IT + Admin</span>
+        </div>
+        <div class="stage-body">
+          <div class="chk"><span class="box"></span><div><div class="ct">Laptop &amp; charger</div></div><span class="right cs" style="color:var(--text3)">IT</span></div>
+          <div class="chk"><span class="box"></span><div><div class="ct">Mobile / SIM</div></div><span class="right cs" style="color:var(--text3)">IT</span></div>
+          <div class="chk"><span class="box"></span><div><div class="ct">ID &amp; access cards, locker key</div></div><span class="right cs" style="color:var(--text3)">Admin</span></div>
+          <div class="chk"><span class="box"></span><div><div class="ct">Revoke portal / email / VPN / licences</div></div><span class="right cs" style="color:var(--text3)">IT</span></div>
+        </div>
+      </div>
+
+      <!-- STAGE 6 -->
+      <div class="stage">
+        <div class="stage-h">
+          <span class="stage-num n-wait">6</span>
+          <div><div class="stage-title">6 · No-Dues Clearance</div><div class="stage-meta">All departments must sign off before the relieving letter</div></div>
+          <span class="stat s-wait">Waiting</span>
+          <span class="owner-tag" style="margin-left:10px">IT · Admin · Finance · Manager</span>
+        </div>
+        <div class="stage-body">
+          <div class="sign"><span class="dept-ic">💻</span><div><div class="dt">IT</div><div class="dd">Assets returned · access revoked</div></div><span class="right btn">Sign off</span></div>
+          <div class="sign"><span class="dept-ic">🗄️</span><div><div class="dt">Admin</div><div class="dd">ID / access cards, keys, facilities</div></div><span class="right btn">Sign off</span></div>
+          <div class="sign"><span class="dept-ic">💰</span><div><div class="dt">Finance</div><div class="dd">Advances, loans &amp; reimbursements reconciled</div></div><span class="right btn">Sign off</span></div>
+          <div class="sign"><span class="dept-ic">👤</span><div><div class="dt">Reporting Manager</div><div class="dd">KT &amp; pending deliverables closed</div></div><span class="right btn">Sign off</span></div>
+        </div>
+      </div>
+
+      <!-- STAGE 7 -->
+      <div class="stage">
+        <div class="stage-h">
+          <span class="stage-num n-wait">7</span>
+          <div><div class="stage-title">7 · F&amp;F &amp; Documents</div><div class="stage-meta">Compute dues; issue relieving, experience &amp; F&amp;F documents — released together</div></div>
+          <span class="stat s-wait">Waiting</span>
+          <span class="owner-tag" style="margin-left:10px">Finance + HR</span>
+        </div>
+        <div class="stage-body">
+          <div class="fnf">
+            <div>
+              <h5>Earnings</h5>
+              <div class="ln"><span>Last month salary (pro-rated)</span><span>₹ 42,000</span></div>
+              <div class="ln"><span>Leave encashment</span><span>₹ 4,500</span></div>
+              <div class="ln"><span>Reimbursements</span><span>₹ 1,200</span></div>
+              <div class="ln"><span>Gratuity</span><span>₹ 0</span></div>
+              <div class="tot"><span>Total earnings</span><span>₹ 47,700</span></div>
+            </div>
+            <div>
+              <h5>Deductions</h5>
+              <div class="ln"><span>Notice shortfall (2 days)</span><span>₹ 8,000</span></div>
+              <div class="ln"><span>Leave during notice</span><span>₹ 0</span></div>
+              <div class="ln"><span>Advances / loans</span><span>₹ 0</span></div>
+              <div class="ln"><span>Statutory (PF / PT / TDS)</span><span>₹ 0</span></div>
+              <div class="tot"><span>Total deductions</span><span>₹ 8,000</span></div>
+            </div>
+          </div>
+          <div class="net"><span class="l">Net payable</span><span class="v">₹ 39,700</span></div>
+
+          <div class="divider"></div>
+          <h5 style="margin:0 0 4px;font-size:12px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">Exit documents</h5>
+          <div class="note" style="margin:0 0 12px">Three documents are issued together once No-Dues clearance is complete and F&amp;F is approved: Relieving Letter, Experience Letter and the F&amp;F Settlement statement (standard Letter_Head template).</div>
+
+          <!-- Experience letter -->
+          <div style="border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:10px">
+            <div class="row-flex"><span class="name">Experience Letter</span><span class="badge b-ok">Released</span>
+              <span style="margin-left:auto" class="meta">Rev 4 · 12 Jun 2026 · Deep Bhatt</span></div>
+            <div class="row-flex" style="gap:8px;margin-top:11px;flex-wrap:wrap">
+              <span class="btn">👁 View</span>
+              <span class="btn">⟳ Regenerate</span>
+              <span class="btn">↩︎ Roll back <span class="badge b-draft">NEW</span></span>
+              <span class="btn">⬇ Download (hard copy) <span class="badge b-draft">NEW</span></span>
+              <span class="btn btn-primary">✉ Send by email <span class="badge" style="background:#fff;color:var(--primary-dark)">NEW</span></span>
+            </div>
+          </div>
+          <!-- Relieving letter -->
+          <div style="border:1px solid var(--border);border-radius:12px;padding:13px">
+            <div class="row-flex"><span class="name">Relieving Letter</span><span class="badge b-draft">Draft — not shared</span>
+              <span style="margin-left:auto" class="meta">Rev 1 · awaiting No-Dues</span></div>
+            <div class="row-flex" style="gap:8px;margin-top:11px;flex-wrap:wrap">
+              <span class="btn">👁 View</span>
+              <span class="btn">⟳ Regenerate</span>
+              <span class="btn">↩︎ Roll back <span class="badge b-draft">NEW</span></span>
+              <span class="btn">⬇ Download (hard copy) <span class="badge b-draft">NEW</span></span>
+              <span class="btn btn-primary">➤ Release &amp; email <span class="badge" style="background:#fff;color:var(--primary-dark)">NEW</span></span>
+            </div>
+            <div class="note">Relieving letter unlocks once the No-Dues clearance (Stage 6) is complete.</div>
+          </div>
+          <!-- F&F settlement document (NEW in R1) -->
+          <div style="border:1px solid var(--border);border-radius:12px;padding:13px;margin-top:10px">
+            <div class="row-flex"><span class="name">F&amp;F Settlement Statement</span><span class="badge b-draft">Draft — not shared</span>
+              <span style="margin-left:auto" class="meta">Auto-built from the figures above</span></div>
+            <div class="row-flex" style="gap:8px;margin-top:11px;flex-wrap:wrap">
+              <span class="btn">👁 View</span>
+              <span class="btn">⟳ Regenerate</span>
+              <span class="btn">↩︎ Roll back <span class="badge b-draft">NEW</span></span>
+              <span class="btn">⬇ Download (hard copy) <span class="badge b-draft">NEW</span></span>
+            </div>
+          </div>
+
+          <!-- Release all three together (R1: documents issued together) -->
+          <div class="banner" style="background:var(--info-bg);border:1px solid #cfe0fb;margin:14px 0 0">
+            <span class="bi">📦</span>
+            <div style="flex:1">
+              <div class="bt">Issue all documents together</div>
+              <div class="bd">Per policy, the relieving, experience and F&amp;F statements are released to the employee in one step — enabled once Stage 6 (No-Dues) is complete and F&amp;F is approved.</div>
+              <div class="row-flex" style="margin-top:10px">
+                <span class="btn btn-primary">✉ Release &amp; email all 3 documents</span>
+                <span class="rolehint">HR / Admin · blocked until clearance + F&amp;F approved</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="side">
+      <div class="scard">
+        <h4>Exit summary</h4>
+        <div class="fact"><span class="k">Status</span><span class="v">Accepted</span></div>
+        <div class="fact"><span class="k">Current stage</span><span class="v">4 · Knowledge Transfer</span></div>
+        <div class="fact"><span class="k">Submitted</span><span class="v">02 Jun 2026</span></div>
+        <div class="fact"><span class="k">Notice required</span><span class="v">30 days</span></div>
+        <div class="fact"><span class="k">Notice served</span><span class="v">28 days</span></div>
+        <div class="fact"><span class="k">Confirmed last day</span><span class="v">02 Jul 2026</span></div>
+        <div class="fact"><span class="k">F&amp;F net payable</span><span class="v">₹ 39,700</span></div>
+      </div>
+
+      <!-- CC NOTIFY (NEW) -->
+      <div class="scard">
+        <h4>Notify · CC <span class="badge b-draft">NEW</span></h4>
+        <div class="chips">
+          <span class="chip"><span class="who">AR</span> Anjali Rao <span class="x">✕</span></span>
+          <span class="chip"><span class="who">FT</span> Finance Team <span class="x">✕</span></span>
+          <span class="chip"><span class="who">IT</span> IT Helpdesk <span class="x">✕</span></span>
+        </div>
+        <span class="btn" style="width:100%;justify-content:center">＋ Add people</span>
+        <div class="note">These people get an in-app notification <b>and email</b> on every update to this exit (acknowledge, accept, reject, revert, letters). Admin / HR / Super Admin can edit this list.</div>
+      </div>
+
+      <div class="scard">
+        <h4>Activity</h4>
+        <div class="tl">
+          <div class="ev"><div class="et">Revert requested</div><div class="ed">16 Jun 2026 · Rahul Mehta</div></div>
+          <div class="ev"><div class="et">KT notes uploaded</div><div class="ed">12 Jun 2026 · Anjali Rao</div></div>
+          <div class="ev"><div class="et">Experience letter released</div><div class="ed">12 Jun 2026 · Deep Bhatt</div></div>
+          <div class="ev"><div class="et">Resignation accepted</div><div class="ed">04 Jun 2026 · Deep Bhatt</div></div>
+          <div class="ev"><div class="et">Acknowledged</div><div class="ed">03 Jun 2026 · Anjali Rao</div></div>
+          <div class="ev"><div class="et">Resignation submitted</div><div class="ed">02 Jun 2026 · Rahul Mehta</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
