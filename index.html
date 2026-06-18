@@ -246,8 +246,8 @@ const STAGES=[
   {n:3,title:'Decision',owner:'Manager + HR'},
   {n:4,title:'Knowledge Transfer',owner:'Manager + Employee'},
   {n:5,title:'Asset Recovery',owner:'IT + Admin'},
-  {n:6,title:'No-Dues & F&F',owner:'All depts · Finance + HR'},
-  {n:7,title:'Relieving & Experience Letters',owner:'Finance + HR'},
+  {n:6,title:'F&F & Documents',owner:'Finance + HR'},
+  {n:7,title:'No-Dues Clearance',owner:'All depts'},
 ];
 function sample(){return{
   role:'admin', open:4,
@@ -307,8 +307,8 @@ const done=n=>{
   if(n===3) return (RANK[S.status]||0)>=3;
   if(n===4) return S.ktSigned;
   if(n===5) return S.assets.every(a=>a.done);
-  if(n===6) return S.noDues.every(x=>x.signed)&&S.fnfApproved&&S.docs.fnf.released;   // No-Dues + F&F doc issued
-  if(n===7) return S.docs.relieving.released&&S.docs.experience.released;             // both letters issued
+  if(n===6) return S.fnfApproved&&S.docs.fnf.released&&S.docs.relieving.released&&S.docs.experience.released; // F&F + docs issued
+  if(n===7) return S.noDues.every(x=>x.signed);                                       // No-Dues clearance (last)
   return false;
 };
 const current=()=>{for(let n=1;n<=7;n++)if(!done(n))return n;return 8;};
@@ -341,8 +341,7 @@ function signDept(i){S.noDues[i].signed=true;log('No-Dues signed: '+S.noDues[i].
 function approveFnf(){S.fnfApproved=true;log('F&F approved',actor());render();toast('F&F approved');}
 function genDoc(k,name){S.docs[k].rev++;render();toast(name+' regenerated (rev '+S.docs[k].rev+')');}
 function rollbackDoc(k,name){S.docs[k].released=false;log(name+' rolled back',actor());render();toast(name+' rolled back to draft');}
-function releaseFnf(){S.docs.fnf.released=true;if(!S.docs.fnf.rev)S.docs.fnf.rev=1;log('F&F Settlement Statement issued & emailed',actor());render();toast('F&F Settlement Statement issued');}
-function releaseLetters(){S.docs.relieving.released=true;S.docs.experience.released=true;log('Relieving & Experience letters released & emailed',actor());render();toast('Both letters released & emailed');}
+function releaseAll(){['fnf','relieving','experience'].forEach(k=>{S.docs[k].released=true;if(!S.docs[k].rev)S.docs[k].rev=1;});log('Documents issued & emailed (F&F statement, relieving, experience)',actor());render();toast('All 3 documents issued & emailed');}
 function sendDoc(name){toast(name+' emailed to employee');}
 function postComment(){const v=$('#cmtIn').value.trim();if(!v)return;S.comments.push({who:S.role==='manager'?'Anjali Rao':'Deep Bhatt',init:S.role==='manager'?'AR':'DB',when:'now',body:v});render();toast('Comment posted');}
 function empReply(){const v=$('#empIn').value.trim();if(!v)return;S.empMsgs.unshift({who:'Rahul Mehta · You',init:'RM',cls:'me',when:'now',body:v});render();toast('Message sent');}
@@ -357,8 +356,8 @@ function undoStage(n){
   if(n===3){S.status='Acknowledged';log('Acceptance undone — Accepted → Acknowledged',who);}
   else if(n===4){S.ktSigned=false;log('KT sign-off undone',who);}
   else if(n===5){S.assets.forEach(a=>a.done=false);log('Asset & access recovery undone',who);}
-  else if(n===6){S.docs.fnf.released=false;S.fnfApproved=false;S.noDues.forEach(x=>x.signed=false);log('No-Dues & F&F undone — F&F statement back to draft',who);}
-  else if(n===7){S.docs.relieving.released=false;S.docs.experience.released=false;log('Letter release undone — relieving & experience back to draft',who);}
+  else if(n===6){S.docs.fnf.released=false;S.docs.relieving.released=false;S.docs.experience.released=false;S.fnfApproved=false;log('F&F & document release undone — back to draft',who);}
+  else if(n===7){S.noDues.forEach(x=>x.signed=false);log('No-Dues clearance undone',who);}
   S.open=n;render();toast('Step undone — recorded in history');
 }
 function undoBtn(n,label){
@@ -473,19 +472,10 @@ function stagesColumn(){
        <div><div class="ct">${a.t}</div></div><span class="right cs">${a.o}</span></div>`).join('')+
      `<div class="note">${isHR()?'Tick items as they are returned / access revoked.':'IT &amp; Admin update this.'}</div>${undoBtn(5,'Undo asset recovery')}</div></div>`;
 
-  // Stage 6 — No-Dues clearance + F&F (with the F&F Settlement Statement document; Admin/HR only)
-  h+=`<div class="stage ${S.open===6?'open':''}">${stageHead(6,'Clearance sign-offs, then compute & issue the F&F statement')}<div class="stage-body">`;
-  h+=`<h5 style="margin:0 0 8px;font-size:11.5px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">${icon('i-shield')} No-Dues clearance</h5>`+
-     S.noDues.map((x,i)=>{
-       const canSign = isHR() || (isMgr() && x.d==='Reporting Manager');
-       return `<div class="sign"><span class="dept-ic">${icon(x.icon,18)}</span>
-         <div><div class="dt">${x.d}</div><div class="dd">${x.desc}</div></div>
-         <span class="right">${x.signed?'<span class="badge b-ok">'+icon('i-check')+' Signed</span>':`<button class="btn" ${canSign?'':'disabled'} onclick="signDept(${i})">Sign off</button>`}</span></div>`;
-     }).join('');
-  // F&F summary + statement — only Admin/HR
+  // Stage 6 — F&F & Documents (F&F summary + F&F statement + relieving + experience; Admin/HR issue, employee can see)
+  h+=`<div class="stage ${S.open===6?'open':''}">${stageHead(6,'Compute F&F, then issue the F&F statement, relieving & experience letters')}<div class="stage-body">`;
   if(isHR()){
-    h+=`<div class="divider"></div>
-      <h5 style="margin:0 0 8px;font-size:11.5px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">${icon('i-dollar')} Full &amp; Final settlement</h5>
+    h+=`<h5 style="margin:0 0 8px;font-size:11.5px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">${icon('i-dollar')} Full &amp; Final settlement</h5>
       <div class="fnf"><div><h5>Earnings</h5>
         <div class="ln"><span>Last month salary (pro-rated)</span><span>₹ 42,000</span></div>
         <div class="ln"><span>Leave encashment</span><span>₹ 4,500</span></div>
@@ -500,28 +490,31 @@ function stagesColumn(){
         <div class="tot"><span>Total deductions</span><span>₹ 8,000</span></div></div></div>
       <div class="net"><span class="l">Net payable</span><span class="v">₹ 39,700</span></div>
       <div class="row-flex" style="margin-top:12px"><button class="btn ${S.fnfApproved?'':'btn-primary'}" ${!S.fnfApproved?'':'disabled'} onclick="approveFnf()">${icon('i-check')} ${S.fnfApproved?'F&F approved':'Approve F&F'}</button><span class="rolehint">Finance / HR only</span></div>
-      <div style="margin-top:14px">`+docCard('fnf','F&F Settlement Statement','i-dollar','info',false)+`</div>`;
-    const fnfReady = noDuesDone() && S.fnfApproved;
-    h+=`<div class="banner banner-blue" style="margin:14px 0 0"><span class="bi bi-blue">${icon('i-file',17)}</span><div style="flex:1">
-        <div class="bt">Issue F&amp;F Settlement Statement</div>
-        <div class="bd">${fnfReady?'Ready to issue & email the F&F statement to the employee.':'Enabled once all No-Dues sign-offs are complete and F&F is approved.'}</div>
-        <div class="row-flex" style="margin-top:11px"><button class="btn btn-primary" ${fnfReady&&!S.docs.fnf.released?'':'disabled'} onclick="releaseFnf()">${icon('i-mail')} ${S.docs.fnf.released?'F&F statement issued':'Issue & email F&F statement'}</button><span class="rolehint">HR / Admin only</span></div></div></div>`;
+      <div class="divider"></div>
+      <h5 style="margin:0 0 5px;font-size:11.5px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">${icon('i-file')} Exit documents</h5>
+      <div class="note" style="margin:0 0 13px">All three are issued together; the employee can view & download them afterwards.</div>`;
+    h+=docCard('fnf','F&F Settlement Statement','i-dollar','info',false);
+    h+=docCard('relieving','Relieving Letter','i-file','warn',false);
+    h+=docCard('experience','Experience Letter','i-file','success',false);
+    const docsReady = S.fnfApproved;
+    h+=`<div class="banner banner-blue" style="margin:14px 0 0"><span class="bi bi-blue">${icon('i-pkg',17)}</span><div style="flex:1">
+        <div class="bt">Issue all documents together</div>
+        <div class="bd">${docsReady?'Ready to issue & email the F&F statement, relieving and experience letters to the employee.':'Approve F&F first to enable issuing the documents.'}</div>
+        <div class="row-flex" style="margin-top:11px"><button class="btn btn-primary" ${docsReady&&!S.docs.fnf.released?'':'disabled'} onclick="releaseAll()">${icon('i-mail')} ${S.docs.fnf.released?'Documents issued':'Issue & email all 3 documents'}</button><span class="rolehint">HR / Admin only</span></div></div></div>`;
   } else {
-    h+=`<div class="note" style="margin-top:12px">${icon('i-lock')} Full &amp; Final settlement and the F&F statement are managed by Finance / HR.</div>`;
+    h+=`<div class="note">${icon('i-lock')} Full &amp; Final settlement and the exit documents are prepared by Finance / HR. They become visible to the employee once issued.</div>`;
   }
-  h+=undoBtn(6,'Undo No-Dues & F&F')+`</div></div>`;
+  h+=undoBtn(6,'Undo F&F & document release')+`</div></div>`;
 
-  // Stage 7 — Relieving & Experience letters (final step, released together)
-  const lettersReady = done(6);
-  h+=`<div class="stage ${S.open===7?'open':''}">${stageHead(7,'Issue the relieving & experience letters — released together')}<div class="stage-body">
-    <div class="note" style="margin:0 0 13px">The relieving and experience letters are issued together once No-Dues clearance and the F&F settlement (Stage 6) are complete.</div>`;
-  h+=docCard('relieving','Relieving Letter','i-file','warn',false);
-  h+=docCard('experience','Experience Letter','i-file','success',false);
-  h+=`<div class="banner banner-blue" style="margin:14px 0 0"><span class="bi bi-blue">${icon('i-pkg',17)}</span><div style="flex:1">
-      <div class="bt">Issue both letters together</div>
-      <div class="bd">Releases the relieving &amp; experience letters to the employee in one step. ${lettersReady?'Ready to release.':'Enabled once Stage 6 (No-Dues & F&F) is complete.'}</div>
-      <div class="row-flex" style="margin-top:11px"><button class="btn btn-primary" ${isHR()&&lettersReady?'':'disabled'} onclick="releaseLetters()">${icon('i-mail')} Release &amp; email both letters</button><span class="rolehint">HR / Admin</span></div></div></div>`;
-  h+=undoBtn(7,'Undo letter release')+`</div></div>`;
+  // Stage 7 — No-Dues Clearance (LAST step)
+  h+=`<div class="stage ${S.open===7?'open':''}">${stageHead(7,'Final clearance — all departments sign off')}<div class="stage-body">`+
+     S.noDues.map((x,i)=>{
+       const canSign = isHR() || (isMgr() && x.d==='Reporting Manager');
+       return `<div class="sign"><span class="dept-ic">${icon(x.icon,18)}</span>
+         <div><div class="dt">${x.d}</div><div class="dd">${x.desc}</div></div>
+         <span class="right">${x.signed?'<span class="badge b-ok">'+icon('i-check')+' Signed</span>':`<button class="btn" ${canSign?'':'disabled'} onclick="signDept(${i})">Sign off</button>`}</span></div>`;
+     }).join('')+
+     `<div class="note" style="margin-top:10px">When every department has signed off, the exit is complete.</div>${undoBtn(7,'Undo No-Dues clearance')}</div></div>`;
   return h;
 }
 function docCard(key,name,ic,tone,canEmail){
@@ -535,7 +528,7 @@ function docCard(key,name,ic,tone,canEmail){
     <button class="btn" onclick="toast('Downloading ${name}…')">${icon('i-download')} Download <span class="newtag">NEW</span></button>`;
   if(canEmail) acts+=`<button class="btn btn-primary" ${isHR()?'':'disabled'} onclick="sendDoc('${name}')">${icon('i-mail')} Send by email <span class="newtag" style="background:#fff">NEW</span></button>`;
   return `<div class="doc"><div class="row-flex"><span class="doc-ic" style="background:${toneBg};color:${toneFg}">${icon(ic,19)}</span>
-    <div style="flex:1"><div class="row-flex"><span class="docname">${name}</span>${badge}</div><div class="meta">Rev ${d.rev}${key==='relieving'&&!d.released?' · awaiting No-Dues':''}</div></div></div>
+    <div style="flex:1"><div class="row-flex"><span class="docname">${name}</span>${badge}</div><div class="meta">Rev ${d.rev}${!d.released?' · draft':''}</div></div></div>
     <div class="row-flex" style="gap:8px;margin-top:12px">${acts}</div></div>`;
 }
 function sidebar(){
@@ -559,8 +552,8 @@ function attnBar(){
   const items=[];
   if(S.revert==='requested'&&isHR()) items.push(`<button class="tagbtn tag-amber" onclick="S.open=0;render()">${icon('i-undo')} Revert request — approve / decline</button>`);
   if(!S.ktSigned) items.push(`<button class="tagbtn tag-blue" onclick="openStage(4)">${icon('i-check')} KT sign-off due</button>`);
-  else if(!noDuesDone()) items.push(`<button class="tagbtn tag-blue" onclick="openStage(6)">${icon('i-shield')} No-Dues sign-offs pending</button>`);
-  else if(!S.docs.relieving.released) items.push(`<button class="tagbtn tag-ok" onclick="openStage(7)">${icon('i-pkg')} Ready to issue documents</button>`);
+  else if(!done(6)) items.push(`<button class="tagbtn tag-blue" onclick="openStage(6)">${icon('i-file')} F&amp;F &amp; documents pending</button>`);
+  else if(!noDuesDone()) items.push(`<button class="tagbtn tag-ok" onclick="openStage(7)">${icon('i-shield')} No-Dues sign-offs pending</button>`);
   if(!items.length) items.push(`<span class="rolehint">Nothing needs your attention right now.</span>`);
   return `<div class="attn"><span class="lbl">Needs attention</span>${items.join('')}</div>`;
 }
