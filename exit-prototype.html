@@ -191,6 +191,34 @@
   .ret{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:7px 11px;color:var(--text2)}
   .ret.done{background:var(--success-bg);border-color:#bce6cb;color:var(--success)}
 
+  /* listing screen */
+  .lhead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px}
+  .ltitle{font-size:22px;font-weight:800}
+  .lsubtitle{font-size:13px;color:var(--text2);margin-top:3px}
+  .ltoolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .lsearch{flex:1;min-width:240px;display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:0 13px;height:42px;color:var(--text3)}
+  .lsearch input{flex:1;border:0;outline:0;background:transparent;font-size:13px;color:var(--text)}
+  .lfilter{height:42px;border:1px solid var(--border);border-radius:11px;background:var(--card);padding:0 12px;font-size:13px;color:var(--text2);min-width:150px}
+  .lcard{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .lhdr{display:flex;align-items:center;gap:11px;padding:12px 18px;background:var(--panel);border-bottom:1px solid var(--border);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)}
+  .lrow{display:flex;align-items:center;gap:11px;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:.12s}
+  .lrow:last-child{border-bottom:0}
+  .lrow:hover{background:var(--panel)}
+  .lavatar{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}
+  .lname{font-size:14px;font-weight:700}
+  .lsub{font-size:12px;color:var(--text3);margin-top:1px}
+  .lcell{font-size:13px;color:var(--text2)}
+  /* modal */
+  .ovl{position:fixed;inset:0;background:rgba(15,23,42,.45);display:grid;place-items:center;z-index:60;padding:20px}
+  .modal{width:100%;max-width:520px;background:var(--card);border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgba(15,23,42,.3)}
+  .mhead{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)}
+  .mtitle{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
+  .mx{cursor:pointer;color:var(--text3);display:flex}
+  .mbody{padding:18px}
+  .mlbl{font-size:12px;font-weight:700;color:var(--text2);margin:0 0 6px}
+  .minput{width:100%;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px;background:#fff;color:var(--text)}
+  .mrow{display:flex;gap:12px}
+  .mfoot{display:flex;justify-content:flex-end;gap:10px;padding:14px 18px;border-top:1px solid var(--border)}
   #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#0f172a;color:#fff;padding:11px 18px;border-radius:11px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:50;display:flex;align-items:center;gap:8px}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -251,7 +279,7 @@ const STAGES=[
   {n:8,title:'Relieving & Experience Letters',owner:'Finance + HR'},
 ];
 function sample(){return{
-  role:'admin', open:4,
+  role:'admin', open:4, view:'list', modal:false,
   emp:{name:'Rahul Mehta',code:'MIPL-0142',title:'Senior Backend Engineer',dept:'Engineering',tenure:'3 yrs 4 mo',initials:'RM'},
   status:'Accepted',
   reason:'Better Opportunity', submitted:'02 Jun 2026', proposedLwd:'02 Jul 2026', confirmedLwd:'02 Jul 2026',
@@ -317,9 +345,38 @@ const current=()=>{for(let n=1;n<=8;n++)if(!done(n))return n;return 9;};
 const noDuesDone=()=>S.noDues.every(x=>x.signed);
 
 /* ---------------- actions ---------------- */
-function setRole(r){S.role=r;const cap=r==='manager'?4:8;S.open=Math.min(current(),cap)||1;render();}
+function setRole(r){S.role=r;const cap=r==='manager'?4:8;S.open=Math.min(current(),cap)||1;S.view=(r==='employee'?'detail':'list');render();}
 function resetState(){S=sample();render();toast('Reset to sample (mid-flow)');}
 function freshStart(){S=fresh();render();toast('Fresh employee — no resignation yet');}
+/* listing ⇄ detail navigation (Admin/HR + Manager) */
+function nav(v){S.view=v;if(v==='detail')S.open=Math.min(current(),isMgr()?4:8)||1;render();}
+function openModal(){S.modal=true;render();}
+function closeModal(){S.modal=false;render();}
+/* Admin/HR creates a resignation on behalf of an employee → same flow */
+function createResignation(){
+  const name=($('#arName')&&$('#arName').value.trim())||'New Employee';
+  const reason=($('#arReason')&&$('#arReason').value)||'Better Opportunity';
+  const lwd=($('#arLwd')&&$('#arLwd').value.trim())||'02 Aug 2026';
+  const startStatus=($('#arStatus')&&$('#arStatus').value)||'Submitted';
+  const init=name.split(/\s+/).map(w=>w[0]||'').slice(0,2).join('').toUpperCase()||'NE';
+  // overwrite the single demo record with the newly created resignation
+  S.emp={name,code:'MIPL-'+(1000+Math.floor(name.length*7)%900),title:'Employee',dept:'—',tenure:'—',initials:init};
+  S.reason=reason; S.submitted='18 Jun 2026'; S.proposedLwd=lwd;
+  S.kt.forEach(k=>{k.done=false;k.s='Pending';}); S.assets.forEach(a=>a.done=false); S.noDues.forEach(x=>x.signed=false);
+  S.ktSigned=false; S.fnfApproved=false; S.revert='none'; S.comments=[]; S.activity=[];
+  S.docs={experience:{rev:0,released:false},relieving:{rev:0,released:false},fnf:{rev:0,released:false}};
+  if(startStatus==='Accepted'){
+    S.status='Accepted'; S.confirmedLwd=lwd; S.noticeServed=28; S.earlyRelease='Granted';
+    S.mgrApproved=true; S.mgrApprovedBy=actor(); S.decidedBy=actor();
+    log('Resignation created (Accepted) by HR',actor());
+  } else {
+    S.status='Submitted'; S.confirmedLwd=''; S.earlyRelease='Not requested';
+    S.mgrApproved=false; S.mgrApprovedBy='';
+    log('Resignation created (Submitted) by HR',actor());
+  }
+  S.modal=false; S.view='detail'; S.open=Math.min(current(),8)||1;
+  render(); toast('Resignation created for '+name);
+}
 function applyResignation(){
   const lwd=($('#apLwd')&&$('#apLwd').value)||'02 Aug 2026';
   const reason=($('#apReason')&&$('#apReason').value)||'Better Opportunity';
@@ -581,25 +638,80 @@ function attnBar(){
   return `<div class="attn"><span class="lbl">Needs attention</span>${items.join('')}</div>`;
 }
 
+/* ---------------- listing screen ---------------- */
+function statusBadge(st){
+  const map={None:'b-lock',Submitted:'b-draft',Acknowledged:'b-draft',Accepted:'b-ok',Completed:'b-ok',Rejected:'b-lock',Cancelled:'b-lock'};
+  return `<span class="badge ${map[st]||'b-lock'}">${st==='None'?'No resignation':st}</span>`;
+}
+// extra static rows so the list looks real; only the live record (S) is interactive
+const DEMO_ROWS=[
+  {name:'Priya Nair',code:'MIPL-0098',sub:'28 May 2026',lwd:'27 Jun 2026',status:'Completed',initials:'PN'},
+  {name:'Karan Shah',code:'MIPL-0231',sub:'10 Jun 2026',lwd:'09 Sep 2026',status:'Acknowledged',initials:'KS'},
+  {name:'Megha Iyer',code:'MIPL-0177',sub:'14 Jun 2026',lwd:'14 Jul 2026',status:'Submitted',initials:'MI'},
+];
+function listView(){
+  const roleLabel = isHR()?'Admin / HR':'Reporting Manager';
+  const liveRow = S.status!=='None' ? [{live:true,name:S.emp.name,code:S.emp.code,sub:S.submitted||'—',lwd:S.confirmedLwd||S.proposedLwd||'—',status:S.status,initials:S.emp.initials}] : [];
+  const rows=[...liveRow,...DEMO_ROWS];
+  const tr = r => `<div class="lrow" onclick="${r.live?`nav('detail')`:`toast('Prototype: only ${r.name.split(' ')[0]}\\'s record is interactive in this demo')`}">
+    <div style="flex:2;display:flex;align-items:center;gap:11px"><span class="lavatar">${r.initials}</span>
+      <div><div class="lname">${r.name}${r.live?' <span class="newtag">LIVE</span>':''}</div><div class="lsub">${r.code}</div></div></div>
+    <div style="flex:1" class="lcell">${r.sub}</div>
+    <div style="flex:1" class="lcell">${r.lwd}</div>
+    <div style="flex:1">${statusBadge(r.status)}</div>
+    <div style="width:28px;color:var(--text3)">${icon('i-chev')}</div></div>`;
+  return `<div class="page">
+    <div class="lhead"><div><div class="ltitle">Offboarding</div><div class="lsubtitle">${rows.length} resignation${rows.length!==1?'s':''} · viewing as ${roleLabel}</div></div>
+      ${isHR()?`<button class="btn btn-primary btn-lg" onclick="openModal()">${icon('i-plus')} Add Resignation</button>`:''}</div>
+    <div class="ltoolbar">
+      <div class="lsearch">${icon('i-user')}<input placeholder="Search by employee name or ID…"/></div>
+      <select class="lfilter"><option>All status</option><option>Submitted</option><option>Acknowledged</option><option>Accepted</option><option>Completed</option></select>
+    </div>
+    <div class="lcard">
+      <div class="lhdr"><div style="flex:2">Employee</div><div style="flex:1">Submitted</div><div style="flex:1">Last day</div><div style="flex:1">Status</div><div style="width:28px"></div></div>
+      ${rows.map(tr).join('')}
+    </div>
+    ${isHR()?`<div class="note" style="max-width:1180px;margin:12px auto 0">Click the <b>LIVE</b> row to open the full exit tracker, or <b>Add Resignation</b> to create one — it flows through the same 8-stage process.</div>`:''}
+  </div>`;
+}
+function addResignationModal(){
+  if(!S.modal) return '';
+  return `<div class="ovl" onclick="if(event.target===this)closeModal()"><div class="modal">
+    <div class="mhead"><div class="mtitle">${icon('i-plus')} Add Resignation</div><span class="mx" onclick="closeModal()">${icon('i-x')}</span></div>
+    <div class="mbody">
+      <div class="mlbl">Employee</div>
+      <input id="arName" class="minput" placeholder="Search & select employee (type a name)…" value="" />
+      <div class="mlbl">Reason for leaving</div>
+      <select id="arReason" class="minput"><option>Better Opportunity</option><option>Higher Education</option><option>Personal Reasons</option><option>Relocation</option><option>Health Issues</option><option>Family Reasons</option><option>Other</option></select>
+      <div class="mrow"><div style="flex:1"><div class="mlbl">Last working day</div><input id="arLwd" class="minput" placeholder="e.g. 02 Aug 2026"/></div>
+        <div style="flex:1"><div class="mlbl">Create as</div><select id="arStatus" class="minput"><option>Submitted</option><option>Accepted</option></select></div></div>
+      <div class="note">“Submitted” enters the normal flow (manager approval → HR accept). “Accepted” skips ahead with the last day confirmed.</div>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="createResignation()">${icon('i-check')} Create resignation</button></div>
+  </div></div>`;
+}
+
 /* ---------------- render: views ---------------- */
 function render(){
   ['admin','manager','employee'].forEach(r=>$('#tab-'+r).classList.toggle('on',S.role===r));
   if(S.role==='employee'){ $('#app').innerHTML=`<div class="page">${employeeView()}</div>`; return; }
+  // Admin/HR + Manager: list landing, click-through to detail
+  if(S.view!=='detail'){ $('#app').innerHTML=listView()+addResignationModal(); return; }
   const roleLabel = S.role==='admin'?'Admin / HR':'Reporting Manager';
   if(S.status==='None'){
     $('#app').innerHTML=`<div class="page">
-      <a class="back" onclick="toast('Back to Offboarding list')">${icon('i-back')} Back to Offboarding · viewing as <b>&nbsp;${roleLabel}</b></a>
+      <a class="back" onclick="nav('list')">${icon('i-back')} Back to Offboarding · viewing as <b>&nbsp;${roleLabel}</b></a>
       ${idcard()}
       <div class="stage" style="margin-top:16px"><div class="stage-body" style="border:0;text-align:center;padding:40px">
         <div style="font-size:15px;font-weight:800">No active resignation for this employee</div>
         <div class="note" style="margin-top:6px">When the employee applies from their portal (Employee tab → Apply for resignation), it appears here for acknowledgement and decision. Use “Fresh start” then the Employee tab to demo the apply flow.</div>
-      </div></div></div>`;
+      </div></div></div>`+addResignationModal();
     return;
   }
   $('#app').innerHTML=`<div class="page">
-    <a class="back" onclick="toast('Back to Offboarding list')">${icon('i-back')} Back to Offboarding · viewing as <b>&nbsp;${roleLabel}</b></a>
+    <a class="back" onclick="nav('list')">${icon('i-back')} Back to Offboarding · viewing as <b>&nbsp;${roleLabel}</b></a>
     ${idcard()}${stepper()}${attnBar()}
-    <div class="grid"><div>${stagesColumn()}</div>${sidebar()}</div></div>`;
+    <div class="grid"><div>${stagesColumn()}</div>${sidebar()}</div></div>`+addResignationModal();
 }
 function applyScreen(){
   return `<div class="hero" style="background:linear-gradient(135deg,#334155,#475569)">
